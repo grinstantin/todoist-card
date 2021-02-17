@@ -23,6 +23,14 @@ class TodoistCardEditor extends LitElement {
         
         return true;
     }
+
+    get _only_today_overdue() {
+        if (this._config) {
+            return this._config.only_today_overdue || false;
+        }
+        
+        return false;
+    }
     
     setConfig(config) {
         this._config = config;
@@ -103,6 +111,16 @@ class TodoistCardEditor extends LitElement {
                 >
                 </ha-switch>
                 Show header
+            </p>
+
+            <p class="option">
+                <ha-switch
+                    .checked=${(this._config.only_today_overdue !== undefined) && (this._config.only_today_overdue !== false)}
+                    .configValue=${'only_today_overdue'}
+                    @change=${this.valueChanged}
+                >
+                </ha-switch>
+                Only show today or overdue
             </p>
         </div>`;
     }
@@ -248,6 +266,9 @@ class TodoistCard extends LitElement {
         }
         
         let items = state.attributes.items || [];
+        if (this.config.only_today_overdue) {
+            items = items.filter(item => (new Date() >= new Date(item.due.date)));
+        }
         
         return html`<ha-card>
             ${(this.config.show_header === undefined) || (this.config.show_header !== false)
