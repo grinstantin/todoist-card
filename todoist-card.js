@@ -147,7 +147,7 @@ class TodoistCard extends LitElement {
     }
 
     getCardSize() {
-        return this.hass.states[this.config.entity].attributes.items.length || 1;
+        return this.hass ? (this.hass.states[this.config.entity].attributes.items.length || 1) : 1;
     }
     
     random(min, max) {
@@ -261,11 +261,11 @@ class TodoistCard extends LitElement {
                     ${items.map(item => {
                         return html`<div class="todoist-item">
                             <ha-icon-button
-                                icon="mdi:checkbox-blank-circle-outline"
+                                icon="mdi:checkbox-marked-circle-outline"
                                 class="todoist-item-close"
                                 @click=${() => this.itemClose(item.id)}
                             ></ha-icon-button>
-                            <span>${item.content}</span>
+                            <div class="todoist-item-text">${item.content}</div>
                             <ha-icon-button
                                 icon="mdi:trash-can-outline"
                                 class="todoist-item-delete"
@@ -292,6 +292,8 @@ class TodoistCard extends LitElement {
             }
             
             .todoist-list {
+                display: flex;
+                flex-direction: column;
                 padding: 15px;
             }
             
@@ -302,15 +304,25 @@ class TodoistCard extends LitElement {
             }
             
             .todoist-item {
+                display: flex;
+                flex-direction: row;
                 line-height: 48px;
             }
             
-            .todoist-item > span {
+            .todoist-item-text {
                 font-size: 16px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+            
+            .todoist-item-close {
+                color: #008000;
             }
             
             .todoist-item-delete {
-                float: right;
+                margin-left: auto;
+                color: #800000;
             }
             
             .todoist-item-add {
