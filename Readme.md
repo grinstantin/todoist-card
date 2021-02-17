@@ -4,7 +4,7 @@
 
 Todoist card for [Home Assistant](https://www.home-assistant.io) Lovelace UI. This card displays items from selected Todoist project.
 
-![Preview of todoist-card](https://user-images.githubusercontent.com/34913257/106402171-f82f7680-6430-11eb-8dba-71f3b42712f9.png)
+![Preview of todoist-card](https://user-images.githubusercontent.com/34913257/108243361-a8ea8500-7156-11eb-8313-a149a7cf38b8.png)
 
 ## Installing
 
