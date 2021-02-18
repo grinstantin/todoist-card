@@ -371,3 +371,8 @@ window.customCards.push({
     name: 'Todoist Card',
     description: 'Custom card for displaying lists from Todoist.',
 });
+
+console.info(
+    '%c TODOIST-CARD ',
+    'color: white; background: orchid; font-weight: 700',
+);

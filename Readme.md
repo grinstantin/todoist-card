@@ -83,8 +83,8 @@ Here is what every option means:
 | -------------------- | :-------: | :----------: | --------------------------------------------------------------- |
 | `type`               | `string`  | **required** | `custom:todoist-card`                                           |
 | `entity`             | `string`  | **required** | An entity_id within the `sensor` domain.                        |
-| `show_header`        | `boolean` |    `true`    | Show friendly name of the selected `sensor` in the card header. |
-| `only_today_overdue` | `boolean` |   `false`    | Only show tasks that are overdue or due today.                  |
+| `show_header`        | `boolean` | `true`       | Show friendly name of the selected `sensor` in the card header. |
+| `only_today_overdue` | `boolean` | `false`      | Only show tasks that are overdue or due today.                  |
 
 ## Actions
 
