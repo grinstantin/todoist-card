@@ -24,6 +24,30 @@ class TodoistCardEditor extends LitElement {
         return true;
     }
 
+    get _show_item_add() {
+        if (this._config) {
+            return this._config.show_item_add || true;
+        }
+        
+        return true;
+    }
+
+    get _show_item_close() {
+        if (this._config) {
+            return this._config.show_item_close || true;
+        }
+        
+        return true;
+    }
+
+    get _show_item_delete() {
+        if (this._config) {
+            return this._config.show_item_delete || true;
+        }
+        
+        return true;
+    }
+
     get _only_today_overdue() {
         if (this._config) {
             return this._config.only_today_overdue || false;
@@ -111,6 +135,36 @@ class TodoistCardEditor extends LitElement {
                 >
                 </ha-switch>
                 Show header
+            </p>
+
+            <p class="option">
+                <ha-switch
+                    .checked=${(this._config.show_item_add === undefined) || (this._config.show_item_add !== false)}
+                    .configValue=${'show_item_add'}
+                    @change=${this.valueChanged}
+                >
+                </ha-switch>
+                Show text input element for adding new items to list
+            </p>
+
+            <p class="option">
+                <ha-switch
+                    .checked=${(this._config.show_item_close === undefined) || (this._config.show_item_close !== false)}
+                    .configValue=${'show_item_close'}
+                    @change=${this.valueChanged}
+                >
+                </ha-switch>
+                Show "close/complete" buttons
+            </p>
+
+            <p class="option">
+                <ha-switch
+                    .checked=${(this._config.show_item_delete === undefined) || (this._config.show_item_delete !== false)}
+                    .configValue=${'show_item_delete'}
+                    @change=${this.valueChanged}
+                >
+                </ha-switch>
+                Show "delete" buttons
             </p>
 
             <p class="option">
@@ -277,34 +331,41 @@ class TodoistCard extends LitElement {
                 ? html`<h1 class="card-header">
                     <div class="name">${state.attributes.friendly_name}</div>
                 </h1>`
-                : html``
-            }
+                : html``}
             ${items.length
                 ? html`<div class="todoist-list">
                     ${items.map(item => {
                         return html`<div class="todoist-item">
-                            <ha-icon-button
-                                icon="mdi:checkbox-marked-circle-outline"
-                                class="todoist-item-close"
-                                @click=${() => this.itemClose(item.id)}
-                            ></ha-icon-button>
+                            ${(this.config.show_item_close === undefined) || (this.config.show_item_close !== false)
+                                ? html`<ha-icon-button
+                                    icon="mdi:checkbox-marked-circle-outline"
+                                    class="todoist-item-close"
+                                    @click=${() => this.itemClose(item.id)}
+                                ></ha-icon-button>`
+                                : html`<ha-icon
+                                    icon="mdi:circle-medium"
+                                ></ha-icon>`}
                             <div class="todoist-item-text">${item.content}</div>
-                            <ha-icon-button
-                                icon="mdi:trash-can-outline"
-                                class="todoist-item-delete"
-                                @click=${() => this.itemDelete(item.id)}
-                            ></ha-icon-button>
+                            ${(this.config.show_item_delete === undefined) || (this.config.show_item_delete !== false)
+                                ? html`<ha-icon-button
+                                    icon="mdi:trash-can-outline"
+                                    class="todoist-item-delete"
+                                    @click=${() => this.itemDelete(item.id)}
+                                ></ha-icon-button>`
+                                : html``}
                         </div>`;
                     })}
                 </ul>`
                 : html`<div class="todoist-list-empty">No uncompleted tasks!</div>`}
-            <input
-                id="todoist-card-item-add"
-                type="text"
-                class="todoist-item-add"
-                placeholder="New item..."
-                @keyup=${this.itemAdd}
-            />
+            ${(this.config.show_item_add === undefined) || (this.config.show_item_add !== false)
+                ? html`<input
+                    id="todoist-card-item-add"
+                    type="text"
+                    class="todoist-item-add"
+                    placeholder="New item..."
+                    @keyup=${this.itemAdd}
+                />`
+                : html``}
         </ha-card>`;
     }
     
