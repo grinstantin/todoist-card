@@ -78,6 +78,9 @@ Typical example of using this card in YAML config would look like this:
 type: 'custom:todoist-card'
 entity: sensor.to_do_list
 show_header: true
+show_item_add: true
+show_item_close: true
+show_item_delete: true
 only_today_overdue: false
 ```
 
@@ -88,9 +91,9 @@ Here is what every option means:
 | `type`               | `string`  | **required** | `custom:todoist-card`                                           |
 | `entity`             | `string`  | **required** | An entity_id within the `sensor` domain.                        |
 | `show_header`        | `boolean` | `true`       | Show friendly name of the selected `sensor` in the card header. |
-| `show_item_add`      | `boolean` | `true`       | Show text input element for adding new items to list.           |
+| `show_item_add`      | `boolean` | `true`       | Show text input element for adding new items to the list.       |
 | `show_item_close`    | `boolean` | `true`       | Show `close/complete` buttons.                                  |
-| `show_item_delete`   | `boolean` | `true`       | Show `delete` buttons                                           |
+| `show_item_delete`   | `boolean` | `true`       | Show `delete` buttons.                                          |
 | `only_today_overdue` | `boolean` | `false`      | Only show tasks that are overdue or due today.                  |
 
 ## Actions

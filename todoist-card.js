@@ -144,7 +144,7 @@ class TodoistCardEditor extends LitElement {
                     @change=${this.valueChanged}
                 >
                 </ha-switch>
-                Show text input element for adding new items to list
+                Show text input element for adding new items to the list
             </p>
 
             <p class="option">
