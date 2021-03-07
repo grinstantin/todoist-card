@@ -78,6 +78,7 @@ Typical example of using this card in YAML config would look like this:
 type: 'custom:todoist-card'
 entity: sensor.to_do_list
 show_header: true
+show_completed: 5
 show_item_add: true
 show_item_close: true
 show_item_delete: true
@@ -86,20 +87,25 @@ only_today_overdue: false
 
 Here is what every option means:
 
-| Name                 |   Type    |   Default    | Description                                                     |
-| -------------------- | :-------: | :----------: | --------------------------------------------------------------- |
-| `type`               | `string`  | **required** | `custom:todoist-card`                                           |
-| `entity`             | `string`  | **required** | An entity_id within the `sensor` domain.                        |
-| `show_header`        | `boolean` | `true`       | Show friendly name of the selected `sensor` in the card header. |
-| `show_item_add`      | `boolean` | `true`       | Show text input element for adding new items to the list.       |
-| `show_item_close`    | `boolean` | `true`       | Show `close/complete` buttons.                                  |
-| `show_item_delete`   | `boolean` | `true`       | Show `delete` buttons.                                          |
-| `only_today_overdue` | `boolean` | `false`      | Only show tasks that are overdue or due today.                  |
+| Name                 |   Type    |   Default    | Description                                                            |
+| -------------------- | :-------: | :----------: | ---------------------------------------------------------------------- |
+| `type`               | `string`  | **required** | `custom:todoist-card`                                                  |
+| `entity`             | `string`  | **required** | An entity_id within the `sensor` domain.                               |
+| `show_completed`     | `integer` | `5`          | Number of completed tasks shown at the end of the list (0 to disable). |
+| `show_header`        | `boolean` | `true`       | Show friendly name of the selected `sensor` in the card header.        |
+| `show_item_add`      | `boolean` | `true`       | Show text input element for adding new items to the list.              |
+| `show_item_close`    | `boolean` | `true`       | Show `close/complete` and `uncomplete` buttons.                        |
+| `show_item_delete`   | `boolean` | `true`       | Show `delete` buttons.                                                 |
+| `only_today_overdue` | `boolean` | `false`      | Only show tasks that are overdue or due today.                         |
+
+` `
+> Note that the completed tasks list is cleared when the page is refreshed.
 
 ## Actions
 
 - _Circle_ marks selected task as completed.
-- _Trash bin_ deletes selected task.
+- _Plus_ "uncompletes" selected task, adding it back to the list.
+- _Trash bin_ deletes selected task (gray one deletes it only from the list of completed items, not from Todoist archive).
 - _Input_ adds new item to the list after pressing `Enter`.
 
 ## License

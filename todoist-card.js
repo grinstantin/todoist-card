@@ -15,6 +15,14 @@ class TodoistCardEditor extends LitElement {
         
         return '';
     }
+
+    get _show_completed() {
+        if (this._config) {
+            return (this._config.show_completed !== undefined) ? this._config.show_completed : 5;
+        }
+        
+        return 5;
+    }
     
     get _show_header() {
         if (this._config) {
@@ -76,6 +84,10 @@ class TodoistCardEditor extends LitElement {
             ? Object.keys(this.hass.states).filter(entity => entity.substr(0, entity.indexOf('.')) === type)
             : [];
     }
+
+    isNumeric(v) {
+        return !isNaN(parseFloat(v)) && isFinite(v);
+    }
     
     valueChanged(e) {
         if (
@@ -88,7 +100,7 @@ class TodoistCardEditor extends LitElement {
         
         if (e.target.configValue) {
             if (e.target.value === '') {
-                if (e.target.configValue !== 'entity') {
+                if (!['entity', 'show_completed'].includes(e.target.configValue)) {
                     delete this._config[e.target.configValue];
                 }
             } else {
@@ -96,7 +108,7 @@ class TodoistCardEditor extends LitElement {
                     ...this._config,
                     [e.target.configValue]: e.target.checked !== undefined
                         ? e.target.checked
-                        : e.target.value,
+                        : this.isNumeric(e.target.value) ? parseFloat(e.target.value) : e.target.value,
                 };
             }
         }
@@ -110,6 +122,7 @@ class TodoistCardEditor extends LitElement {
         }
         
         const entities = this.getEntitiesByType('sensor');
+        const completedCount = [...Array(16).keys()];
 
         return html`<div class="card-config">
             <paper-dropdown-menu
@@ -123,6 +136,21 @@ class TodoistCardEditor extends LitElement {
                 >
                     ${entities.map(entity => {
                         return html`<paper-item>${entity}</paper-item>`;
+                    })}
+                </paper-listbox>
+            </paper-dropdown-menu>
+
+            <paper-dropdown-menu
+                label="Number of completed tasks shown at the end of the list (0 to disable)"
+                .configValue=${'show_completed'}
+                @value-changed=${this.valueChanged}
+            >
+                <paper-listbox
+                    slot="dropdown-content"
+                    .selected=${completedCount.indexOf(this._show_completed)}
+                >
+                    ${completedCount.map(count => {
+                        return html`<paper-item>${count}</paper-item>`;
                     })}
                 </paper-listbox>
             </paper-dropdown-menu>
@@ -154,7 +182,7 @@ class TodoistCardEditor extends LitElement {
                     @change=${this.valueChanged}
                 >
                 </ha-switch>
-                Show "close/complete" buttons
+                Show "close/complete" and "uncomplete" buttons
             </p>
 
             <p class="option">
@@ -199,6 +227,12 @@ class TodoistCardEditor extends LitElement {
 
 
 class TodoistCard extends LitElement {
+    constructor() {
+        super();
+
+        this.itemsCompleted = [];
+    }
+
     static get properties() {
         return {
             hass: Object,
@@ -225,6 +259,12 @@ class TodoistCard extends LitElement {
     random(min, max) {
         return Math.floor(Math.random() * (max - min) + min);
     }
+
+    getUUID() {
+        let date = new Date();
+                    
+        return this.random(1, 100) + '-' + (+date) + '-' + date.getMilliseconds();
+    }
     
     itemAdd(e) {
         if (e.which === 13) {
@@ -235,81 +275,109 @@ class TodoistCard extends LitElement {
                 let stateValue = this.hass.states[this.config.entity].state || undefined;
                 
                 if (stateValue) {
-                    let date = new Date();
-                    
-                    let temp = this.random(1, 100) + '-' + (+date) + '-' + date.getMilliseconds();
+                    let uuid = this.getUUID();
                     
                     let commands = [{
                         'type': 'item_add',
-                        'temp_id': temp,
-                        'uuid': temp,
+                        'temp_id': uuid,
+                        'uuid': uuid,
                         'args': {
                             'project_id': stateValue,
                             'content': value,
                         },
                     }];
-                    
-                    this.hass.callService('rest_command', 'todoist', {
-                        commands: JSON.stringify(commands),
-                    });
-                    
-                    input.value = '';
-                    
-                    let t = this;
-                    setTimeout(function () {
-                        t.hass.callService('homeassistant', 'update_entity', {
-                            entity_id: t.config.entity,
+
+                    this.hass
+                        .callService('rest_command', 'todoist', {
+                            commands: JSON.stringify(commands),
+                        })
+                        .then(response => {
+                            input.value = '';
+
+                            this.hass.callService('homeassistant', 'update_entity', {
+                                entity_id: this.config.entity,
+                            });
                         });
-                    }, 1000);
                 }
             }
         }
     }
     
-    itemClose(itemId) {
-        let date = new Date();
-        
+    itemClose(item) {
         let commands = [{
             'type': 'item_close',
-            'uuid': this.random(1, 100) + '-' + (+date) + '-' + date.getMilliseconds(),
+            'uuid': this.getUUID(),
             'args': {
-                'id': itemId,
+                'id': item.id,
             },
         }];
         
-        this.hass.callService('rest_command', 'todoist', {
-            commands: JSON.stringify(commands),
-        });
-        
-        let t = this;
-        setTimeout(function () {
-            t.hass.callService('homeassistant', 'update_entity', {
-                entity_id: t.config.entity,
+        this.hass
+            .callService('rest_command', 'todoist', {
+                commands: JSON.stringify(commands),
+            })
+            .then(response => {
+                if (this.itemsCompleted.length >= this.config.show_completed) {
+                    this.itemsCompleted.splice(0, this.itemsCompleted.length - this.config.show_completed + 1);
+                }
+                this.itemsCompleted.push(item);
+
+                this.hass.callService('homeassistant', 'update_entity', {
+                    entity_id: this.config.entity,
+                });
             });
-        }, 1000);
+    }
+
+    itemUncomplete(item) {
+        let commands = [{
+            'type': 'item_uncomplete',
+            'uuid': this.getUUID(),
+            'args': {
+                'id': item.id,
+            },
+        }];
+        
+        this.hass
+            .callService('rest_command', 'todoist', {
+                commands: JSON.stringify(commands),
+            })
+            .then(response => {
+                this.itemDeleteCompleted(item);
+
+                // this.hass.callService('homeassistant', 'update_entity', {
+                //     entity_id: this.config.entity,
+                // });
+            });
     }
     
-    itemDelete(itemId) {
-        let date = new Date();
-        
+    itemDelete(item) {
         let commands = [{
             'type': 'item_delete',
-            'uuid': this.random(1, 100) + '-' + (+date) + '-' + date.getMilliseconds(),
+            'uuid': this.getUUID(),
             'args': {
-                'id': itemId,
+                'id': item.id,
             },
         }];
         
-        this.hass.callService('rest_command', 'todoist', {
-            commands: JSON.stringify(commands),
-        });
-        
-        let t = this;
-        setTimeout(function () {
-            t.hass.callService('homeassistant', 'update_entity', {
-                entity_id: t.config.entity,
+        this.hass
+            .callService('rest_command', 'todoist', {
+                commands: JSON.stringify(commands),
+            })
+            .then(response => {
+                this.hass.callService('homeassistant', 'update_entity', {
+                    entity_id: this.config.entity,
+                });
             });
-        }, 1000);
+    }
+
+    itemDeleteCompleted(item) {
+        this.itemsCompleted = this.itemsCompleted.filter(v => {
+            return v.id != item.id;
+        });
+
+        this.hass.callService('homeassistant', 'update_entity', {
+            entity_id: this.config.entity,
+        });
     }
 
     render() {
@@ -332,15 +400,15 @@ class TodoistCard extends LitElement {
                     <div class="name">${state.attributes.friendly_name}</div>
                 </h1>`
                 : html``}
-            ${items.length
-                ? html`<div class="todoist-list">
-                    ${items.map(item => {
+            <div class="todoist-list">
+                ${items.length
+                    ? items.map(item => {
                         return html`<div class="todoist-item">
                             ${(this.config.show_item_close === undefined) || (this.config.show_item_close !== false)
                                 ? html`<ha-icon-button
                                     icon="mdi:checkbox-marked-circle-outline"
                                     class="todoist-item-close"
-                                    @click=${() => this.itemClose(item.id)}
+                                    @click=${() => this.itemClose(item)}
                                 ></ha-icon-button>`
                                 : html`<ha-icon
                                     icon="mdi:circle-medium"
@@ -350,13 +418,36 @@ class TodoistCard extends LitElement {
                                 ? html`<ha-icon-button
                                     icon="mdi:trash-can-outline"
                                     class="todoist-item-delete"
-                                    @click=${() => this.itemDelete(item.id)}
+                                    @click=${() => this.itemDelete(item)}
                                 ></ha-icon-button>`
                                 : html``}
                         </div>`;
-                    })}
-                </ul>`
-                : html`<div class="todoist-list-empty">No uncompleted tasks!</div>`}
+                    })
+                    : html`<div class="todoist-list-empty">No uncompleted tasks!</div>`}
+                ${this.config.show_completed && this.itemsCompleted
+                    ? this.itemsCompleted.map(item => {
+                            return html`<div class="todoist-item todoist-item-completed">
+                                ${(this.config.show_item_close === undefined) || (this.config.show_item_close !== false)
+                                    ? html`<ha-icon-button
+                                        icon="mdi:plus-outline"
+                                        class="todoist-item-close"
+                                        @click=${() => this.itemUncomplete(item)}
+                                    ></ha-icon-button>`
+                                    : html`<ha-icon
+                                        icon="mdi:circle-medium"
+                                    ></ha-icon>`}
+                                <div class="todoist-item-text">${item.content}</div>
+                                ${(this.config.show_item_delete === undefined) || (this.config.show_item_delete !== false)
+                                    ? html`<ha-icon-button
+                                        icon="mdi:trash-can-outline"
+                                        class="todoist-item-delete"
+                                        @click=${() => this.itemDeleteCompleted(item)}
+                                    ></ha-icon-button>`
+                                    : html``}
+                            </div>`;
+                        })
+                    : html``}
+            </div>
             ${(this.config.show_item_add === undefined) || (this.config.show_item_add !== false)
                 ? html`<input
                     id="todoist-card-item-add"
@@ -393,6 +484,10 @@ class TodoistCard extends LitElement {
                 line-height: 48px;
             }
             
+            .todoist-item-completed {
+                color: #808080;
+            }
+            
             .todoist-item-text {
                 font-size: 16px;
                 white-space: nowrap;
@@ -403,10 +498,18 @@ class TodoistCard extends LitElement {
             .todoist-item-close {
                 color: #008000;
             }
+
+            .todoist-item-completed .todoist-item-close {
+                color: #808080;
+            }
             
             .todoist-item-delete {
                 margin-left: auto;
                 color: #800000;
+            }
+
+            .todoist-item-completed .todoist-item-delete {
+                color: #808080;
             }
             
             .todoist-item-add {
