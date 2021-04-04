@@ -98,7 +98,6 @@ Here is what every option means:
 | `show_item_delete`   | `boolean` | `true`       | Show `delete` buttons.                                                 |
 | `only_today_overdue` | `boolean` | `false`      | Only show tasks that are overdue or due today.                         |
 
-` `
 > Note that the completed tasks list is cleared when the page is refreshed.
 
 ## Actions
