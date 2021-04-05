@@ -4,68 +4,68 @@ class TodoistCardEditor extends LitElement {
     static get properties() {
         return {
             hass: Object,
-            _config: Object,
+            config: Object,
         };
     }
     
     get _entity() {
-        if (this._config) {
-            return this._config.entity || '';
+        if (this.config) {
+            return this.config.entity || '';
         }
         
         return '';
     }
 
     get _show_completed() {
-        if (this._config) {
-            return (this._config.show_completed !== undefined) ? this._config.show_completed : 5;
+        if (this.config) {
+            return (this.config.show_completed !== undefined) ? this.config.show_completed : 5;
         }
         
         return 5;
     }
     
     get _show_header() {
-        if (this._config) {
-            return this._config.show_header || true;
+        if (this.config) {
+            return this.config.show_header || true;
         }
         
         return true;
     }
 
     get _show_item_add() {
-        if (this._config) {
-            return this._config.show_item_add || true;
+        if (this.config) {
+            return this.config.show_item_add || true;
         }
         
         return true;
     }
 
     get _show_item_close() {
-        if (this._config) {
-            return this._config.show_item_close || true;
+        if (this.config) {
+            return this.config.show_item_close || true;
         }
         
         return true;
     }
 
     get _show_item_delete() {
-        if (this._config) {
-            return this._config.show_item_delete || true;
+        if (this.config) {
+            return this.config.show_item_delete || true;
         }
         
         return true;
     }
 
     get _only_today_overdue() {
-        if (this._config) {
-            return this._config.only_today_overdue || false;
+        if (this.config) {
+            return this.config.only_today_overdue || false;
         }
         
         return false;
     }
     
     setConfig(config) {
-        this._config = config;
+        this.config = config;
     }
     
     configChanged(config) {
@@ -91,7 +91,7 @@ class TodoistCardEditor extends LitElement {
     
     valueChanged(e) {
         if (
-            !this._config
+            !this.config
             || !this.hass
             || (this[`_${e.target.configValue}`] === e.target.value)
         ) {
@@ -101,11 +101,11 @@ class TodoistCardEditor extends LitElement {
         if (e.target.configValue) {
             if (e.target.value === '') {
                 if (!['entity', 'show_completed'].includes(e.target.configValue)) {
-                    delete this._config[e.target.configValue];
+                    delete this.config[e.target.configValue];
                 }
             } else {
-                this._config = {
-                    ...this._config,
+                this.config = {
+                    ...this.config,
                     [e.target.configValue]: e.target.checked !== undefined
                         ? e.target.checked
                         : this.isNumeric(e.target.value) ? parseFloat(e.target.value) : e.target.value,
@@ -113,7 +113,7 @@ class TodoistCardEditor extends LitElement {
             }
         }
         
-        this.configChanged(this._config);
+        this.configChanged(this.config);
     }
     
     render() {
@@ -132,7 +132,7 @@ class TodoistCardEditor extends LitElement {
             >
                 <paper-listbox
                     slot="dropdown-content"
-                    .selected=${entities.indexOf(this._config.entity || '')}
+                    .selected=${entities.indexOf(this.config.entity || '')}
                 >
                     ${entities.map(entity => {
                         return html`<paper-item>${entity}</paper-item>`;
@@ -157,7 +157,7 @@ class TodoistCardEditor extends LitElement {
             
             <p class="option">
                 <ha-switch
-                    .checked=${(this._config.show_header === undefined) || (this._config.show_header !== false)}
+                    .checked=${(this.config.show_header === undefined) || (this.config.show_header !== false)}
                     .configValue=${'show_header'}
                     @change=${this.valueChanged}
                 >
@@ -167,7 +167,7 @@ class TodoistCardEditor extends LitElement {
 
             <p class="option">
                 <ha-switch
-                    .checked=${(this._config.show_item_add === undefined) || (this._config.show_item_add !== false)}
+                    .checked=${(this.config.show_item_add === undefined) || (this.config.show_item_add !== false)}
                     .configValue=${'show_item_add'}
                     @change=${this.valueChanged}
                 >
@@ -177,7 +177,7 @@ class TodoistCardEditor extends LitElement {
 
             <p class="option">
                 <ha-switch
-                    .checked=${(this._config.show_item_close === undefined) || (this._config.show_item_close !== false)}
+                    .checked=${(this.config.show_item_close === undefined) || (this.config.show_item_close !== false)}
                     .configValue=${'show_item_close'}
                     @change=${this.valueChanged}
                 >
@@ -187,7 +187,7 @@ class TodoistCardEditor extends LitElement {
 
             <p class="option">
                 <ha-switch
-                    .checked=${(this._config.show_item_delete === undefined) || (this._config.show_item_delete !== false)}
+                    .checked=${(this.config.show_item_delete === undefined) || (this.config.show_item_delete !== false)}
                     .configValue=${'show_item_delete'}
                     @change=${this.valueChanged}
                 >
@@ -197,7 +197,7 @@ class TodoistCardEditor extends LitElement {
 
             <p class="option">
                 <ha-switch
-                    .checked=${(this._config.only_today_overdue !== undefined) && (this._config.only_today_overdue !== false)}
+                    .checked=${(this.config.only_today_overdue !== undefined) && (this.config.only_today_overdue !== false)}
                     .configValue=${'only_today_overdue'}
                     @change=${this.valueChanged}
                 >
