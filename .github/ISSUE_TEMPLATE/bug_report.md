@@ -8,8 +8,8 @@ assignees: grinstantin
 ---
 
 **Before submitting a bug**
-[ ] I updated to the latest card version available
-[ ] I cleared the cache of my browser
+- [ ] I updated to the latest card version available
+- [ ] I cleared the cache of my browser
 
 **Describe the bug**
 A clear and concise description of what the bug is.
