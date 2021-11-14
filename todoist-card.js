@@ -406,20 +406,22 @@ class TodoistCard extends LitElement {
                         return html`<div class="todoist-item">
                             ${(this.config.show_item_close === undefined) || (this.config.show_item_close !== false)
                                 ? html`<ha-icon-button
-                                    icon="mdi:checkbox-marked-circle-outline"
                                     class="todoist-item-close"
                                     @click=${() => this.itemClose(item)}
-                                ></ha-icon-button>`
+                                >
+                                    <ha-icon icon="mdi:checkbox-marked-circle-outline"></ha-icon>
+                                </ha-icon-button>`
                                 : html`<ha-icon
                                     icon="mdi:circle-medium"
                                 ></ha-icon>`}
                             <div class="todoist-item-text">${item.content}</div>
                             ${(this.config.show_item_delete === undefined) || (this.config.show_item_delete !== false)
                                 ? html`<ha-icon-button
-                                    icon="mdi:trash-can-outline"
                                     class="todoist-item-delete"
                                     @click=${() => this.itemDelete(item)}
-                                ></ha-icon-button>`
+                                >
+                                    <ha-icon icon="mdi:trash-can-outline"></ha-icon>
+                                </ha-icon-button>`
                                 : html``}
                         </div>`;
                     })
@@ -429,20 +431,22 @@ class TodoistCard extends LitElement {
                             return html`<div class="todoist-item todoist-item-completed">
                                 ${(this.config.show_item_close === undefined) || (this.config.show_item_close !== false)
                                     ? html`<ha-icon-button
-                                        icon="mdi:plus-outline"
                                         class="todoist-item-close"
                                         @click=${() => this.itemUncomplete(item)}
-                                    ></ha-icon-button>`
+                                    >
+                                        <ha-icon icon="mdi:plus-outline"></ha-icon>
+                                    </ha-icon-button>`
                                     : html`<ha-icon
                                         icon="mdi:circle-medium"
                                     ></ha-icon>`}
                                 <div class="todoist-item-text">${item.content}</div>
                                 ${(this.config.show_item_delete === undefined) || (this.config.show_item_delete !== false)
                                     ? html`<ha-icon-button
-                                        icon="mdi:trash-can-outline"
                                         class="todoist-item-delete"
                                         @click=${() => this.itemDeleteCompleted(item)}
-                                    ></ha-icon-button>`
+                                    >
+                                        <ha-icon icon="mdi:trash-can-outline"></ha-icon>
+                                    </ha-icon-button>`
                                     : html``}
                             </div>`;
                         })
