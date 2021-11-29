@@ -487,7 +487,7 @@ class TodoistCard extends LitElement {
                 flex-direction: row;
                 line-height: 48px;
             }
-            
+
             .todoist-item-completed {
                 color: #808080;
             }
@@ -524,6 +524,10 @@ class TodoistCard extends LitElement {
                 box-sizing: border-box;
                 border-radius: 5px;
                 font-size: 16px;
+            }
+
+            .todoist-item ha-icon-button ha-icon {
+                margin-top: -10px;
             }
         `;
     }
