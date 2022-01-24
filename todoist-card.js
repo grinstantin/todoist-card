@@ -390,7 +390,15 @@ class TodoistCard extends LitElement {
         let items = state.attributes.items || [];
         if (this.config.only_today_overdue) {
             items = items.filter(item => {
-                return item.due && (+(new Date()) >= +(new Date(item.due.date))); // TODO: handle item.due.timezone
+                if (item.due) {
+                    if (/^\d{4}-\d{2}-\d{2}$/.test(item.due.date)) {
+                        item.due.date += 'T00:00:00';
+                    }
+                    
+                    return (new Date()).setHours(23, 59, 59, 999) >= (new Date(item.due.date)).getTime();
+                }
+
+                return false;
             });
         }
         
