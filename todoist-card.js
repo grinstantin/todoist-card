@@ -422,7 +422,12 @@ class TodoistCard extends LitElement {
                                 : html`<ha-icon
                                     icon="mdi:circle-medium"
                                 ></ha-icon>`}
-                            <div class="todoist-item-text">${item.content}</div>
+                            <div class="todoist-item-text">
+                                ${item.description
+                                    ? html`<span class="todoist-item-content">${item.content}</span>
+                                           <span class="todoist-item-description">${item.description}</span>`
+                                    : item.content}
+                            </div>
                             ${(this.config.show_item_delete === undefined) || (this.config.show_item_delete !== false)
                                 ? html`<ha-icon-button
                                     class="todoist-item-delete"
@@ -447,7 +452,12 @@ class TodoistCard extends LitElement {
                                     : html`<ha-icon
                                         icon="mdi:circle-medium"
                                     ></ha-icon>`}
-                                <div class="todoist-item-text">${item.content}</div>
+                                <div class="todoist-item-text">
+                                    ${item.description
+                                        ? html`<span class="todoist-item-content">${item.content}</span>
+                                            <span class="todoist-item-description">${item.description}</span>`
+                                        : item.content}
+                                </div>
                                 ${(this.config.show_item_delete === undefined) || (this.config.show_item_delete !== false)
                                     ? html`<ha-icon-button
                                         class="todoist-item-delete"
@@ -500,11 +510,23 @@ class TodoistCard extends LitElement {
                 color: #808080;
             }
             
-            .todoist-item-text {
+            .todoist-item-text, .todoist-item-text > span {
                 font-size: 16px;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
+            }
+
+            .todoist-item-content {
+                display: block;
+                margin: -12px 0 -25px;
+            }
+
+            .todoist-item-description {
+                display: block;
+                opacity: 0.5;
+                font-size: 12px;
+                margin: -15px 0;
             }
             
             .todoist-item-close {
