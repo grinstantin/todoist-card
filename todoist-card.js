@@ -525,7 +525,7 @@ class TodoistCard extends LitElement {
             .todoist-item-description {
                 display: block;
                 opacity: 0.5;
-                font-size: 12px;
+                font-size: 12px !important;
                 margin: -15px 0;
             }
             
