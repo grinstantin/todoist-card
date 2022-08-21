@@ -46,23 +46,24 @@ This card can be configured using Lovelace UI editor.
           project_id: TODOIST_PROJECT_ID
         value_template: '{{value_json[''project''][''id'']}}'
         json_attributes:
+          - project
           - items
         scan_interval: 30
 
     rest_command:
       todoist:
         method: post
-        url: 'https://api.todoist.com/sync/v8/sync'
+        url: 'https://api.todoist.com/sync/v9/{{ url }}'
         payload: !secret todoist_api_payload
         content_type: 'application/x-www-form-urlencoded'
     ```
 2. ... and to `secrets.yaml`:
     ```yaml
     todoist_api_token: TODOIST_API_TOKEN
-    todoist_api_payload: token=TODOIST_API_TOKEN&commands={{commands}}
+    todoist_api_payload: token=TODOIST_API_TOKEN&{{ payload }}
     ```
 3. Replace `TODOIST_API_TOKEN` with your [token](https://todoist.com/prefs/integrations) and `TODOIST_PROJECT_ID` with ID of your selected Todoist project.
-    > Your can get `TODOIST_PROJECT_ID` from project URL, which usually looks like this:
+    > You can get `TODOIST_PROJECT_ID` from project URL, which usually looks like this:
     `https://todoist.com/app/project/TODOIST_PROJECT_ID`
 4. Reload configs or restart Home Assistant.
 5. In Lovelace UI, click 3 dots in top left corner.
@@ -80,6 +81,7 @@ entity: sensor.to_do_list
 show_header: true
 show_completed: 5
 show_item_add: true
+use_quick_add: false
 show_item_close: true
 show_item_delete: true
 only_today_overdue: false
@@ -87,16 +89,17 @@ only_today_overdue: false
 
 Here is what every option means:
 
-| Name                 |   Type    |   Default    | Description                                                            |
-| -------------------- | :-------: | :----------: | ---------------------------------------------------------------------- |
-| `type`               | `string`  | **required** | `custom:todoist-card`                                                  |
-| `entity`             | `string`  | **required** | An entity_id within the `sensor` domain.                               |
-| `show_completed`     | `integer` | `5`          | Number of completed tasks shown at the end of the list (0 to disable). |
-| `show_header`        | `boolean` | `true`       | Show friendly name of the selected `sensor` in the card header.        |
-| `show_item_add`      | `boolean` | `true`       | Show text input element for adding new items to the list.              |
-| `show_item_close`    | `boolean` | `true`       | Show `close/complete` and `uncomplete` buttons.                        |
-| `show_item_delete`   | `boolean` | `true`       | Show `delete` buttons.                                                 |
-| `only_today_overdue` | `boolean` | `false`      | Only show tasks that are overdue or due today.                         |
+| Name                 |   Type    |   Default    | Description                                                                                                                      |
+| -------------------- | :-------: | :----------: | -------------------------------------------------------------------------------------------------------------------------------- |
+| `type`               | `string`  | **required** | `custom:todoist-card`                                                                                                            |
+| `entity`             | `string`  | **required** | An entity_id within the `sensor` domain.                                                                                         |
+| `show_completed`     | `integer` | `5`          | Number of completed tasks shown at the end of the list (0 to disable).                                                           |
+| `show_header`        | `boolean` | `true`       | Show friendly name of the selected `sensor` in the card header.                                                                  |
+| `show_item_add`      | `boolean` | `true`       | Show text input element for adding new items to the list.                                                                        |
+| `use_quick_add`      | `boolean` | `false`      | Use the [Quick Add](https://todoist.com/help/articles/task-quick-add) implementation, available in the official Todoist clients. |
+| `show_item_close`    | `boolean` | `true`       | Show `close/complete` and `uncomplete` buttons.                                                                                  |
+| `show_item_delete`   | `boolean` | `true`       | Show `delete` buttons.                                                                                                           |
+| `only_today_overdue` | `boolean` | `false`      | Only show tasks that are overdue or due today.                                                                                   |
 
 > Note that the completed tasks list is cleared when the page is refreshed.
 

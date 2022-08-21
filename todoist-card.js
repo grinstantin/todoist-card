@@ -40,6 +40,14 @@ class TodoistCardEditor extends LitElement {
         return true;
     }
 
+    get _use_quick_add() {
+        if (this.config) {
+            return this.config.use_quick_add || false;
+        }
+        
+        return false;
+    }
+
     get _show_item_close() {
         if (this.config) {
             return this.config.show_item_close || true;
@@ -125,97 +133,117 @@ class TodoistCardEditor extends LitElement {
         const completedCount = [...Array(16).keys()];
 
         return html`<div class="card-config">
-            <paper-dropdown-menu
-                label="Entity (required)"
-                .configValue=${'entity'}
-                @value-changed=${this.valueChanged}
-            >
-                <paper-listbox
-                    slot="dropdown-content"
-                    .selected=${entities.indexOf(this.config.entity || '')}
+            <div class="option">
+                <ha-select
+                    naturalMenuWidth
+                    fixedMenuPosition
+                    label="Entity (required)"
+                    @selected=${this.valueChanged}
+                    @closed=${(event) => event.stopPropagation()}
+                    .configValue=${'entity'}
+                    .value=${this._entity}
                 >
                     ${entities.map(entity => {
-                        return html`<paper-item>${entity}</paper-item>`;
+                        return html`<mwc-list-item .value="${entity}">${entity}</mwc-list-item>`;
                     })}
-                </paper-listbox>
-            </paper-dropdown-menu>
+                </ha-select>
+            </div>
 
-            <paper-dropdown-menu
-                label="Number of completed tasks shown at the end of the list (0 to disable)"
-                .configValue=${'show_completed'}
-                @value-changed=${this.valueChanged}
-            >
-                <paper-listbox
-                    slot="dropdown-content"
-                    .selected=${completedCount.indexOf(this._show_completed)}
+            <div class="option">
+                <ha-select
+                    naturalMenuWidth
+                    fixedMenuPosition
+                    label="Number of completed tasks shown at the end of the list (0 to disable)"
+                    @selected=${this.valueChanged}
+                    @closed=${(event) => event.stopPropagation()}
+                    .configValue=${'show_completed'}
+                    .value=${this._show_completed}
                 >
                     ${completedCount.map(count => {
-                        return html`<paper-item>${count}</paper-item>`;
+                        return html`<mwc-list-item .value="${count}">${count}</mwc-list-item>`;
                     })}
-                </paper-listbox>
-            </paper-dropdown-menu>
+                </ha-select>
+            </div>
             
-            <p class="option">
+            <div class="option">
                 <ha-switch
                     .checked=${(this.config.show_header === undefined) || (this.config.show_header !== false)}
                     .configValue=${'show_header'}
                     @change=${this.valueChanged}
                 >
                 </ha-switch>
-                Show header
-            </p>
+                <span>Show header</span>
+            </div>
 
-            <p class="option">
+            <div class="option">
                 <ha-switch
                     .checked=${(this.config.show_item_add === undefined) || (this.config.show_item_add !== false)}
                     .configValue=${'show_item_add'}
                     @change=${this.valueChanged}
                 >
                 </ha-switch>
-                Show text input element for adding new items to the list
-            </p>
+                <span>Show text input element for adding new items to the list</span>
+            </div>
 
-            <p class="option">
+            <div class="option">
+                <ha-switch
+                    .checked=${(this.config.use_quick_add !== undefined) && (this.config.use_quick_add !== false)}
+                    .configValue=${'use_quick_add'}
+                    @change=${this.valueChanged}
+                >
+                </ha-switch>
+                <span>
+                    Use the <a target="_blank" href="https://todoist.com/help/articles/task-quick-add">Quick Add</a> implementation, available in the official Todoist clients
+                </span>
+            </div>
+            <div class="option" style="font-size: 0.7rem; margin: -12px 0 0 45px">
+                <span>
+                    Check your <a target="_blank" href="https://github.com/grinstantin/todoist-card#using-the-card">configuration</a> before using this option
+                </span>
+            </div>
+
+            <div class="option">
                 <ha-switch
                     .checked=${(this.config.show_item_close === undefined) || (this.config.show_item_close !== false)}
                     .configValue=${'show_item_close'}
                     @change=${this.valueChanged}
                 >
                 </ha-switch>
-                Show "close/complete" and "uncomplete" buttons
-            </p>
+                <span>Show "close/complete" and "uncomplete" buttons</span>
+            </div>
 
-            <p class="option">
+            <div class="option">
                 <ha-switch
                     .checked=${(this.config.show_item_delete === undefined) || (this.config.show_item_delete !== false)}
                     .configValue=${'show_item_delete'}
                     @change=${this.valueChanged}
                 >
                 </ha-switch>
-                Show "delete" buttons
-            </p>
+                <span>Show "delete" buttons</span>
+            </div>
 
-            <p class="option">
+            <div class="option">
                 <ha-switch
                     .checked=${(this.config.only_today_overdue !== undefined) && (this.config.only_today_overdue !== false)}
                     .configValue=${'only_today_overdue'}
                     @change=${this.valueChanged}
                 >
                 </ha-switch>
-                Only show today or overdue
-            </p>
+                <span>Only show today or overdue</span>
+            </div>
         </div>`;
     }
     
     static get styles() {
         return css`
-            .card-config paper-dropdown-menu {
+            .card-config ha-select {
                 width: 100%;
             }
             
             .option {
                 display: flex;
                 align-items: center;
+                padding: 5px;
             }
             
             .option ha-switch {
@@ -276,28 +304,49 @@ class TodoistCard extends LitElement {
                 
                 if (stateValue) {
                     let uuid = this.getUUID();
-                    
-                    let commands = [{
-                        'type': 'item_add',
-                        'temp_id': uuid,
-                        'uuid': uuid,
-                        'args': {
-                            'project_id': stateValue,
-                            'content': value,
-                        },
-                    }];
 
-                    this.hass
-                        .callService('rest_command', 'todoist', {
-                            commands: JSON.stringify(commands),
-                        })
-                        .then(response => {
-                            input.value = '';
+                    if (!this.config.use_quick_add) {
+                        let commands = [{
+                            'type': 'item_add',
+                            'temp_id': uuid,
+                            'uuid': uuid,
+                            'args': {
+                                'project_id': stateValue,
+                                'content': value,
+                            },
+                        }];
 
-                            this.hass.callService('homeassistant', 'update_entity', {
-                                entity_id: this.config.entity,
+                        this.hass
+                            .callService('rest_command', 'todoist', {
+                                url: 'sync',
+                                payload: 'commands=' + JSON.stringify(commands),
+                            })
+                            .then(response => {
+                                input.value = '';
+
+                                this.hass.callService('homeassistant', 'update_entity', {
+                                    entity_id: this.config.entity,
+                                });
                             });
-                        });
+                    } else {
+                        let state = this.hass.states[this.config.entity] || undefined;
+                        if (!state) {
+                            return;
+                        }
+                        
+                        this.hass
+                            .callService('rest_command', 'todoist', {
+                                url: 'quick/add',
+                                payload: 'text=' + value + ' #' + state.attributes.project.name,
+                            })
+                            .then(response => {
+                                input.value = '';
+    
+                                this.hass.callService('homeassistant', 'update_entity', {
+                                    entity_id: this.config.entity,
+                                });
+                            });
+                    }
                 }
             }
         }
@@ -314,7 +363,8 @@ class TodoistCard extends LitElement {
         
         this.hass
             .callService('rest_command', 'todoist', {
-                commands: JSON.stringify(commands),
+                url: 'sync',
+                payload: 'commands=' + JSON.stringify(commands),
             })
             .then(response => {
                 if (this.itemsCompleted.length >= this.config.show_completed) {
@@ -339,7 +389,8 @@ class TodoistCard extends LitElement {
         
         this.hass
             .callService('rest_command', 'todoist', {
-                commands: JSON.stringify(commands),
+                url: 'sync',
+                payload: 'commands=' + JSON.stringify(commands),
             })
             .then(response => {
                 this.itemDeleteCompleted(item);
@@ -361,7 +412,8 @@ class TodoistCard extends LitElement {
         
         this.hass
             .callService('rest_command', 'todoist', {
-                commands: JSON.stringify(commands),
+                url: 'sync',
+                payload: 'commands=' + JSON.stringify(commands),
             })
             .then(response => {
                 this.hass.callService('homeassistant', 'update_entity', {
