@@ -44,7 +44,7 @@ This card can be configured using Lovelace UI editor.
         params:
           token: !secret todoist_api_token
           project_id: TODOIST_PROJECT_ID
-        value_template: '{{value_json[''project''][''id'']}}'
+        value_template: '{{ value_json[''project''][''id''] }}'
         json_attributes:
           - project
           - items
