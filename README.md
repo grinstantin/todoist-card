@@ -40,7 +40,7 @@ This card can be configured using Lovelace UI editor.
       - platform: rest
         name: To-do List
         method: GET
-        resource: 'https://api.todoist.com/sync/v8/projects/get_data'
+        resource: 'https://api.todoist.com/sync/v9/projects/get_data'
         params:
           token: !secret todoist_api_token
           project_id: TODOIST_PROJECT_ID
