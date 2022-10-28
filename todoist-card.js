@@ -528,6 +528,7 @@ class TodoistCard extends LitElement {
                     type="text"
                     class="todoist-item-add"
                     placeholder="New item..."
+                    enterkeyhint="enter"
                     @keyup=${this.itemAdd}
                 />`
                 : html``}
