@@ -42,8 +42,9 @@ This card can be configured using Lovelace UI editor.
         method: GET
         resource: 'https://api.todoist.com/sync/v9/projects/get_data'
         params:
-          token: !secret todoist_api_token
           project_id: TODOIST_PROJECT_ID
+        headers:
+          Authorization: !secret todoist_api_token
         value_template: '{{ value_json[''project''][''id''] }}'
         json_attributes:
           - project
@@ -54,13 +55,14 @@ This card can be configured using Lovelace UI editor.
       todoist:
         method: post
         url: 'https://api.todoist.com/sync/v9/{{ url }}'
-        payload: !secret todoist_api_payload
+        payload: '{{ payload }}'
+        headers:
+          Authorization: !secret todoist_api_token
         content_type: 'application/x-www-form-urlencoded'
     ```
 2. ... and to `secrets.yaml`:
     ```yaml
-    todoist_api_token: TODOIST_API_TOKEN
-    todoist_api_payload: token=TODOIST_API_TOKEN&{{ payload }}
+    todoist_api_token: 'Bearer TODOIST_API_TOKEN'
     ```
 3. Replace `TODOIST_API_TOKEN` with your [token](https://todoist.com/prefs/integrations) and `TODOIST_PROJECT_ID` with ID of your selected Todoist project.
     > You can get `TODOIST_PROJECT_ID` from project URL, which usually looks like this:
