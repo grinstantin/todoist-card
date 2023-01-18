@@ -79,6 +79,14 @@ class TodoistCardEditor extends LitElement {
         
         return false;
     }
+
+    get _newest_first() {
+        if (this.config) {
+            return this.config.newest_first || false;
+        }
+
+        return false;
+    }
     
     setConfig(config) {
         this.config = config;
@@ -249,6 +257,17 @@ class TodoistCardEditor extends LitElement {
                 </ha-switch>
                 <span>Sort by due date</span>
             </div>
+
+            ${this.config.sort_by_due_date === true ? html`
+            <div class="option">
+                <ha-switch
+                    .checked=${(this.config.newest_first !== undefined) && (this.config.newest_first !== false)}
+                    .configValue=${'newest_first'}
+                    @change=${this.valueChanged}
+                >
+                </ha-switch>
+                <span>Sort by due date with the newest first, otherwise oldest first</span>
+            </div>` : null }
         </div>`;
     }
     
@@ -474,8 +493,11 @@ class TodoistCard extends LitElement {
 
         if (this.config.sort_by_due_date) {
             items.sort((a, b) => {
-                if (a.due && b.due) {                   
-                    return (new Date(a.due.date)).getTime() - (new Date(b.due.date)).getTime();
+                if (a.due && b.due) {                  
+                    if (this.config.newest_first){ 
+                        return (new Date(a.due.date)).getTime() - (new Date(b.due.date)).getTime();
+                    }
+                    return (new Date(b.due.date)).getTime() - (new Date(a.due.date)).getTime();
                 }
 
                 return 0;
