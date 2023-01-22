@@ -87,6 +87,14 @@ class TodoistCardEditor extends LitElement {
 
         return false;
     }
+
+    get _custom_days_filter() {
+        if (this.config) {
+            return this.config.custom_days_filter || -1;
+        }
+        
+        return -1;
+    }
     
     setConfig(config) {
         this.config = config;
@@ -147,6 +155,7 @@ class TodoistCardEditor extends LitElement {
         
         const entities = this.getEntitiesByType('sensor');
         const completedCount = [...Array(16).keys()];
+        const daysOut = [-1, ...Array(90).keys()];
 
         return html`<div class="card-config">
             <div class="option">
@@ -268,6 +277,23 @@ class TodoistCardEditor extends LitElement {
                 </ha-switch>
                 <span>Sort by due date in ascending order, otherwise descending</span>
             </div>` : null }
+            <div class="option">
+                <ha-select
+                    naturalMenuWidth
+                    fixedMenuPosition
+                    label="Only show tasks due within the next X days (-1 to disable, 0 for today, 1 for tomorrow, etc)"
+                    @selected=${this.valueChanged}
+                    @closed=${(event) => event.stopPropagation()}
+                    .configValue=${'custom_days_filter'}
+                    .value=${this._custom_days_filter}
+                >
+            
+                ${daysOut.map(days => {
+                    return html`<mwc-list-item .value="${days}">${days}</mwc-list-item>`;
+                })}
+                </ha-select>
+            </div>
+
         </div>`;
     }
     
@@ -501,6 +527,21 @@ class TodoistCard extends LitElement {
                 }
 
                 return 0;
+            });
+        }
+        
+        if (this.config.custom_days_filter !== -1) {
+            const days_out = this.config.custom_days_filter;
+            items = items.filter(item => {
+                if (item.due) {
+                    if (/^\d{4}-\d{2}-\d{2}$/.test(item.due.date)) {
+                        item.due.date += 'T00:00:00';
+                    }
+                    
+                    return (new Date()).setHours(23, 59, 59, 999) + (days_out * 24 * 60 * 60 * 1000) >= (new Date(item.due.date)).getTime();
+                }
+
+                return false;
             });
         }
         
