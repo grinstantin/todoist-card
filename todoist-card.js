@@ -71,6 +71,14 @@ class TodoistCardEditor extends LitElement {
         
         return false;
     }
+
+    get _custom_days_filter() {
+        if (this.config) {
+            return this.config.custom_days_filter || -1;
+        }
+        
+        return -1;
+    }
     
     setConfig(config) {
         this.config = config;
@@ -231,6 +239,17 @@ class TodoistCardEditor extends LitElement {
                 </ha-switch>
                 <span>Only show today or overdue</span>
             </div>
+
+            <div class="option">
+                <ha-input
+                    .checked=${(this.config.custom_days_filter !== undefined) && (this.config.custom_days_filter !== -1)}
+                    .configValue=${'custom_days_filter'}
+                    @change=${this.valueChanged}
+                >
+                </ha-input>
+                <span>Only show tasks due within the next X days</span>
+            </div>
+
         </div>`;
     }
     
@@ -448,6 +467,21 @@ class TodoistCard extends LitElement {
                     }
                     
                     return (new Date()).setHours(23, 59, 59, 999) >= (new Date(item.due.date)).getTime();
+                }
+
+                return false;
+            });
+        }
+
+        if (this.config.custom_days_filter !== -1) {
+            const days_out = this.config.custom_days_filter;
+            items = items.filter(item => {
+                if (item.due) {
+                    if (/^\d{4}-\d{2}-\d{2}$/.test(item.due.date)) {
+                        item.due.date += 'T00:00:00';
+                    }
+                    
+                    return (new Date()).setHours(23, 59, 59, 999) + (days_out * 24 * 60 * 60 * 1000) >= (new Date(item.due.date)).getTime();
                 }
 
                 return false;
