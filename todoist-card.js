@@ -245,7 +245,7 @@ class TodoistCardEditor extends LitElement {
                 <ha-select
                     naturalMenuWidth
                     fixedMenuPosition
-                    label="Only show tasks due within the next X days (0 for today, 1 for tomorrow, etc)"
+                    label="Only show tasks due within the next X days (-1 to disable, 0 for today, 1 for tomorrow, etc)"
                     @selected=${this.valueChanged}
                     @closed=${(event) => event.stopPropagation()}
                     .configValue=${'custom_days_filter'}
