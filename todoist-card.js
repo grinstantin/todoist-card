@@ -241,13 +241,16 @@ class TodoistCardEditor extends LitElement {
             </div>
 
             <div class="option">
-                <ha-input
-                    .checked=${(this.config.custom_days_filter !== undefined) && (this.config.custom_days_filter !== -1)}
+                <ha-select
+                    naturalMenuWidth
+                    fixedMenuPosition
+                    label="Only show tasks due within the next X days (-1 to disable, 0 for today, 1 for tomorrow, etc)"
+                    @selected=${this.valueChanged}
+                    @closed=${(event) => event.stopPropagation()}
                     .configValue=${'custom_days_filter'}
-                    @change=${this.valueChanged}
+                    .value=${this._custom_days_filter}
                 >
-                </ha-input>
-                <span>Only show tasks due within the next X days</span>
+                </ha-switch>
             </div>
 
         </div>`;
