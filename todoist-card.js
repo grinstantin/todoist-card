@@ -139,6 +139,7 @@ class TodoistCardEditor extends LitElement {
         
         const entities = this.getEntitiesByType('sensor');
         const completedCount = [...Array(16).keys()];
+        const daysOut = [...Array(90).keys()];
 
         return html`<div class="card-config">
             <div class="option">
@@ -241,15 +242,25 @@ class TodoistCardEditor extends LitElement {
             </div>
 
             <div class="option">
-                <ha-select
-                    naturalMenuWidth
-                    fixedMenuPosition
-                    label="Only show tasks due within the next X days (-1 to disable, 0 for today, 1 for tomorrow, etc)"
-                    @selected=${this.valueChanged}
-                    @closed=${(event) => event.stopPropagation()}
+                <ha-switch
+                    .checked=${(this.config.custom_days_filter !== undefined) && (this.config.custom_days_filter !== -1)}
                     .configValue=${'custom_days_filter'}
-                    .value=${this._custom_days_filter}
+                    @change=${this.valueChanged}
                 >
+                    <ha-select
+                        naturalMenuWidth
+                        fixedMenuPosition
+                        label="Only show tasks due within the next X days (0 for today, 1 for tomorrow, etc)"
+                        @selected=${this.valueChanged}
+                        @closed=${(event) => event.stopPropagation()}
+                        .configValue=${'custom_days_filter'}
+                        .value=${this._custom_days_filter}
+                    >
+                
+                ${daysOut.map(days => {
+                    return html`<mwc-list-item .value="${days}">${days}</mwc-list-item>`;
+                })}
+                </ha-select>
                 </ha-switch>
             </div>
 
