@@ -463,7 +463,7 @@ class TodoistCard extends LitElement {
             <div class="todoist-list">
                 ${items.length
                     ? items.map(item => {
-                        return html`<div class="todoist-item">
+                        return html`<div class="todoist-item ${(item.parent_id != undefined) ? ' todoist-item-idented':''}">
                             ${(this.config.show_item_close === undefined) || (this.config.show_item_close !== false)
                                 ? html`<ha-icon-button
                                     class="todoist-item-close"
@@ -557,6 +557,10 @@ class TodoistCard extends LitElement {
                 display: flex;
                 flex-direction: row;
                 line-height: 48px;
+            }
+			
+            .todoist-item-idented {
+                margin-left: 40px;
             }
 
             .todoist-item-completed {
