@@ -352,6 +352,23 @@ class TodoistCard extends LitElement {
         }
     }
     
+    getPriority(item) {
+        if(item.priority == 1)
+        {
+            return "p1";
+        }
+        if(item.priority == 2)
+        {
+            return "p2";
+        }
+        if(item.priority == 3)
+        {
+            return "p3";
+        }
+        
+        return "p4";
+    }
+    
     itemClose(item) {
         let commands = [{
             'type': 'item_close',
@@ -474,7 +491,7 @@ class TodoistCard extends LitElement {
                                 : html`<ha-icon
                                     icon="mdi:circle-medium"
                                 ></ha-icon>`}
-                            <div class="todoist-item-text">
+                            <div class="todoist-item-text ${this.getPriority(item)}">
                                 ${item.description
                                     ? html`<span class="todoist-item-content">${item.content}</span>
                                            <span class="todoist-item-description">${item.description}</span>`
@@ -504,7 +521,7 @@ class TodoistCard extends LitElement {
                                     : html`<ha-icon
                                         icon="mdi:circle-medium"
                                     ></ha-icon>`}
-                                <div class="todoist-item-text">
+                                <div class="todoist-item-text ${this.getPriority(item)}">
                                     ${item.description
                                         ? html`<span class="todoist-item-content">${item.content}</span>
                                             <span class="todoist-item-description">${item.description}</span>`
@@ -582,10 +599,6 @@ class TodoistCard extends LitElement {
                 margin: -15px 0;
             }
             
-            .todoist-item-close {
-                color: #008000;
-            }
-
             .todoist-item-completed .todoist-item-close {
                 color: #808080;
             }
@@ -611,6 +624,27 @@ class TodoistCard extends LitElement {
 
             .todoist-item ha-icon-button ha-icon {
                 margin-top: -10px;
+            }
+
+            .p4 {
+                background-image: linear-gradient(128deg, #cf473a 0%, #dc4c3e 100%);
+                background-repeat: no-repeat;
+                background-size: 100% 0.2em;
+                background-position: 0 80%;
+            }
+            .p3 {
+                background-image: linear-gradient(128deg, #c77100 0%, #eb8909 100%);
+                background-repeat: no-repeat;
+                background-size: 100% 0.2em;
+                background-position: 0 80%;
+            }
+            .p2 {
+                background-image: linear-gradient(128deg, #246fe0 0%, #a7c5f3 100%);
+                background-repeat: no-repeat;
+                background-size: 100% 0.2em;
+                background-position: 0 80%;
+            }
+            .p1 {
             }
         `;
     }
