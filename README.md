@@ -1,4 +1,4 @@
-# Todoist Card
+# Todoist Kanban Card
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/hacs/integration)
 ![hacs_badge](https://img.shields.io/github/v/release/grinstantin/todoist-card)

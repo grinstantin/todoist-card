@@ -1,0 +1,15 @@
+{
+  "name": "todoist-kanban-card",
+  "version": "1.0.0",
+  "description": "Home Assistant card for displaying projects from Todoist in a Kanban format",
+  "main": "todoist-kanban-card.js",
+  "type": "module",
+  "scripts": {
+    "start": "web-dev-server"
+  },
+  "author": "Bruno Corte",
+  "license": "ISC",
+  "devDependencies": {
+    "@web/dev-server": "^0.4.0"
+  }
+}
