@@ -1,6 +1,6 @@
 {
-    "name": "Todoist Card",
+    "name": "Todoist Kanban Card",
     "content_in_root": true,
-    "filename": "todoist-card.js",
+    "filename": "todoist-kanban-card.js",
     "render_readme": true
 }
