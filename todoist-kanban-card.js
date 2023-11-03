@@ -260,7 +260,6 @@ class TodoistKanbanCard extends LitElement {
         super();
 
         this.itemsCompleted = [];
-        this.edittingItem = undefined;
     }
 
     static get properties() {
@@ -358,118 +357,75 @@ class TodoistKanbanCard extends LitElement {
         }
     }
     
-    itemClose(item) {
-        let commands = [{
-            'type': 'item_close',
-            'uuid': this.getUUID(),
-            'args': {
-                'id': item.id,
-            },
-        }];
-        
-        this.hass
-            .callService('rest_command', 'todoist', {
-                url: 'sync',
-                payload: 'commands=' + JSON.stringify(commands),
-            })
-            .then(response => {
-                if (this.itemsCompleted.length >= this.config.show_completed) {
-                    this.itemsCompleted.splice(0, this.itemsCompleted.length - this.config.show_completed + 1);
-                }
-                this.itemsCompleted.push(item);
-
-                this.hass.callService('homeassistant', 'update_entity', {
-                    entity_id: this.config.entity,
-                });
-            });
-    }
-
-    itemUncomplete(item) {
-        let commands = [{
-            'type': 'item_uncomplete',
-            'uuid': this.getUUID(),
-            'args': {
-                'id': item.id,
-            },
-        }];
-        
-        this.hass
-            .callService('rest_command', 'todoist', {
-                url: 'sync',
-                payload: 'commands=' + JSON.stringify(commands),
-            })
-            .then(response => {
-                this.itemDeleteCompleted(item);
-
-                // this.hass.callService('homeassistant', 'update_entity', {
-                //     entity_id: this.config.entity,
-                // });
-            });
-    }
-    
     itemDelete(item) {
-        let commands = [{
-            'type': 'item_delete',
-            'uuid': this.getUUID(),
-            'args': {
-                'id': item.id,
-            },
-        }];
+        let state = this.hass.states[this.config.entity] || undefined;
         
-        this.hass
-            .callService('rest_command', 'todoist', {
-                url: 'sync',
-                payload: 'commands=' + JSON.stringify(commands),
-            })
-            .then(response => {
-                this.hass.callService('homeassistant', 'update_entity', {
-                    entity_id: this.config.entity,
-                });
-            });
-    }
+        if (state) {
+            let items = state.attributes.items || [];
+            let itemIndex = items.indexOf(item);
+            items.splice(itemIndex, 1);
 
-    itemDeleteCompleted(item) {
-        this.itemsCompleted = this.itemsCompleted.filter(v => {
-            return v.id != item.id;
-        });
-
-        this.hass.callService('homeassistant', 'update_entity', {
-            entity_id: this.config.entity,
-        });
-    }
-
-    itemSave(item) {
-        let input = this.shadowRoot.getElementById('todoist-card-item-edit');
-        let value = input.value;
-        
-        if (value && value.length > 1) {
-            let stateValue = this.hass.states[this.config.entity].state || undefined;
+            let commands = [{
+                'type': 'item_delete',
+                'uuid': this.getUUID(),
+                'args': {
+                    'id': item.id,
+                },
+            }];
             
-            if (stateValue) {
-                let uuid = this.getUUID();
-                let commands = [{
-                    "type": "item_update",
-                    "uuid": uuid,
-                    "args": {
-                        "id": item.id,
-                        "project_id": stateValue,
-                        "content": value,
-                    }
-                }];
-                this.hass
-                    .callService('rest_command', 'todoist', {
-                        url: 'sync',
-                        payload: 'commands=' + JSON.stringify(commands),
-                    })
-                    .then(response => {
-                        this.hass.callService('homeassistant', 'update_entity', {
-                            entity_id: this.config.entity,
-                        });
-                        this.edittingItem = null;
-                        console.log("Response from rest", response)
+            this.hass
+                .callService('rest_command', 'todoist', {
+                    url: 'sync',
+                    payload: 'commands=' + JSON.stringify(commands),
+                })
+                .then(response => {
+                    this.hass.callService('homeassistant', 'update_entity', {
+                        entity_id: this.config.entity,
                     });
-            }
+                });
+
+            this.requestUpdate();
         }
+    }
+
+    itemMove(item, direction) {
+        let state = this.hass.states[this.config.entity] || undefined;
+        
+        if (state) {
+            let sections = state.attributes.sections || [];
+            console.log("Sections", sections);
+            let section = sections.find(section => section.id == item.section_id)
+            let sectionIndex = sections.indexOf(section);
+            let newSection;
+
+            if (direction === "right") {
+                newSection = sections[sectionIndex + 1]
+            } else {
+                newSection = sections[sectionIndex - 1]
+            }
+            item.section_id = newSection.id;
+
+            let uuid = this.getUUID();
+            let commands = [{
+                "type": "item_move",
+                "uuid": uuid,
+                "args": {
+                    "id": item.id,
+                    "section_id": newSection.id,
+                }
+            }];
+            this.hass
+                .callService('rest_command', 'todoist', {
+                    url: 'sync',
+                    payload: 'commands=' + JSON.stringify(commands),
+                })
+                .then(response => {
+                    this.hass.callService('homeassistant', 'update_entity', {
+                        entity_id: this.config.entity,
+                    });
+                });
+            this.requestUpdate();
+        }      
     }
 
     render() {
@@ -480,8 +436,8 @@ class TodoistKanbanCard extends LitElement {
         }
         
         let items = state.attributes.items || [];
-        //let sections = state.attributes.sections || [];
-        //console.log("Items", items);
+        let sections = state.attributes.sections || [];
+        
         if (this.config.only_today_overdue) {
             items = items.filter(item => {
                 if (item.due) {
@@ -495,202 +451,167 @@ class TodoistKanbanCard extends LitElement {
                 return false;
             });
         }
-        let show_header = this.config.show_header ?? true;
+        sections = sections.map(section => {
+            return {
+                ...section,
+                items: items.filter(item => item.section_id == section.id)
+            }
+        });
 
-        return html`<ha-card class="${show_header ? "has-header" : ""}" header="${show_header ? state.attributes.friendly_name : ""}">
-            <div class="todoist-list ${show_header ? "has-header" : ""}">
-                ${items.length
-                    ? items.map(item => {
-                        return html`<div class="todoist-item">
-                            ${(this.config.show_item_close === undefined) || (this.config.show_item_close !== false)
-                                ? html`<ha-icon-button
-                                    class="todoist-item-close"
-                                    @click=${() => this.itemClose(item)}
-                                >
-                                    <ha-icon icon="mdi:checkbox-blank-outline"></ha-icon>
-                                </ha-icon-button>`
-                                : html`<ha-icon
-                                    icon="mdi:circle-medium"
-                                ></ha-icon>`}
-                            <div class="todoist-item-text">
-                                ${item.id === this.edittingItem 
-                                    ? html`<div class="todoist-list-edit-row">
-                                        <ha-textfield
-                                            id="todoist-card-item-edit"
-                                            type="text"
-                                            class="todoist-item-edit"
-                                            value="${item.content}"
-                                            @keyup=${(e) => { if (e.which === 13) this.itemSave(item); } }
-                                        ></ha-textfield>
-                                        <ha-icon-button @click=${() => this.itemSave(item)}>
-                                            <ha-icon icon="mdi:check"></ha-icon>
-                                        </ha-icon-button>
-                                        <ha-icon-button @click=${() => this.edittingItem = null}>
-                                            <ha-icon icon="mdi:cancel"></ha-icon>
-                                        </ha-icon-button>
-                                    </div>` 
-                                    : (item.description
-                                        ? html`<div @click="${() => this.edittingItem = item.id}">
-                                            <span class="todoist-item-content">${item.content}</span>
-                                            <span class="todoist-item-description">${item.description}</span>
-                                            </div>`
-                                        : html`<span @click="${() => this.edittingItem = item.id}">${item.content}</span>`)}
-                            </div>
-                            ${((this.config.show_item_delete === undefined) || (this.config.show_item_delete !== false)) && (this.edittingItem !== item.id)
-                                ? html`<ha-icon-button
-                                    class="todoist-item-delete"
-                                    @click=${() => this.itemDelete(item)}
-                                >
-                                    <ha-icon icon="mdi:close"></ha-icon>
-                                </ha-icon-button>`
-                                : html``}
-                        </div>`;
-                    })
-                    : html`<div class="todoist-list-empty">No uncompleted tasks!</div>`}
-                ${this.config.show_completed && this.itemsCompleted
-                    ? this.itemsCompleted.map(item => {
-                            return html`<div class="todoist-item todoist-item-completed">
-                                ${(this.config.show_item_close === undefined) || (this.config.show_item_close !== false)
-                                    ? html`<ha-icon-button
-                                        class="todoist-item-close"
-                                        @click=${() => this.itemUncomplete(item)}
-                                    >
-                                        <ha-icon icon="mdi:checkbox-outline"></ha-icon>
-                                    </ha-icon-button>`
-                                    : html`<ha-icon
-                                        icon="mdi:circle-medium"
-                                    ></ha-icon>`}
-                                <div class="todoist-item-text">
-                                    ${item.description
-                                        ? html`<span class="todoist-item-content">${item.content}</span>
-                                            <span class="todoist-item-description">${item.description}</span>`
-                                        : item.content}
+        let show_header = this.config.show_header ?? true;      
+
+        return html`<ha-card class="${show_header ? "has-header" : ""}">
+            <div class="container">
+                ${show_header ? html`<h1 class="kanban-heading">${state.attributes.friendly_name}</h1>` : html``}
+                
+                <div class="kanban-board">
+                    ${sections.map((section, index) => html`
+                        <div class="kanban-block" id="todo">
+                            <strong>${section.name}</strong>
+                            <div class="todoist-list">
+                                ${section.items.map(item => html`
+                                    <div class="card">
+                                        <span class="card-content">${item.content}</span>
+                                        ${index > 0
+                                            ? html`<ha-icon-button @click=${() => this.itemMove(item, 'left')}>
+                                                    <ha-icon icon="mdi:arrow-left">
+                                                    </ha-icon>
+                                                </button>` 
+                                            : html``}
+                                        ${index < sections.length - 1 
+                                            ? html`<ha-icon-button @click=${() => this.itemMove(item, 'right')}>
+                                                    <ha-icon icon="mdi:arrow-right">
+                                                    </ha-icon>
+                                                </button>` 
+                                            : html``}
+                                        ${index === sections.length - 1
+                                            ? html`<ha-icon-button
+                                                        class="todoist-item-delete"
+                                                        @click=${() => this.itemDelete(item)}>
+                                                        <ha-icon icon="mdi:close"></ha-icon>
+                                                    </ha-icon-button>`
+                                            : html``}
+                                    </div>
+                                `)}
                                 </div>
-                                ${(this.config.show_item_delete === undefined) || (this.config.show_item_delete !== false)
-                                    ? html`<ha-icon-button
-                                        class="todoist-item-delete"
-                                        @click=${() => this.itemDeleteCompleted(item)}
-                                    >
-                                        <ha-icon icon="mdi:trash-can-outline"></ha-icon>
-                                    </ha-icon-button>`
-                                    : html``}
-                            </div>`;
-                        })
-                    : html``}
+                            ${index === 0 && ((this.config.show_item_add === undefined) || (this.config.show_item_add !== false))
+                                ? html`<footer class="todoist-list-add-row">
+                                            <ha-textfield
+                                            id="todoist-card-item-add"
+                                            type="text"
+                                            class="todoist-item-add"
+                                            placeholder="Add item"
+                                            enterkeyhint="enter"
+                                            @keyup=${this.keyUp}
+                                        ></ha-textfield>
+                                        <ha-icon-button
+                                            class="todoist-item-add-btn"
+                                            @click=${this.itemAdd}
+                                        >
+                                            <ha-icon icon="mdi:plus"></ha-icon>
+                                        </ha-icon-button>
+                                    </footer>`
+                                : html``}
+                        </div>`
+                    )}
+                </div>
             </div>
-            ${(this.config.show_item_add === undefined) || (this.config.show_item_add !== false)
-                ? html`<div class="todoist-list-add-row">
-                    <ha-textfield
-                        id="todoist-card-item-add"
-                        type="text"
-                        class="todoist-item-add"
-                        placeholder="Add item"
-                        enterkeyhint="enter"
-                        @keyup=${this.keyUp}
-                    ></ha-textfield>
-                    <ha-icon-button
-                        class="todoist-item-add-btn"
-                        @click=${this.itemAdd}
-                    >
-                        <ha-icon icon="mdi:plus"></ha-icon>
-                    </ha-icon-button>
-                </div>`
-                : html``}
         </ha-card>`;
     }
     
     static get styles() {
         return css`
-            ha-card {
-                padding: 16px;
-            }
-
-            .has-header {
-                padding-top: 0 !important;
-            }
-
-            .card-header {
-                padding-bottom: unset;
-            }
-            
-            .todoist-list {
-                display: flex;
-                flex-direction: column;
-                padding-bottom: 15px;
-            }
-            
-            .todoist-list-empty {
-                padding: 15px;
-                text-align: center;
-                font-size: 24px;
-            }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
         
-            .todoist-item {
-                display: flex;
-                flex-direction: row;
-                line-height: 48px;
-            }
+        .container {
+            width: calc(100% - 20px);
+            margin: 20px auto;
+        }
+        
+        .kanban-heading {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            font-size: 32px;
+            color: #333;
+            margin-bottom: 16px;
+        }
+        
+        .kanban-board {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        
+        .kanban-block {
+            width: 30%;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            overflow-y: auto;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+        }
 
-            .todoist-item-completed {
-                color: #808080;
-            }
-            
-            .todoist-item-text, .todoist-item-text > span {
-                font-size: 16px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                width: 100%;
-            }
+        .todoist-list-add-row {
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
+        
+        .kanban-block strong {
+            display: block;
+            text-align: center;
+            padding: 10px;
+            background-color: #eee;
+        }
+        
+        .kanban-block ul {
+            list-style: none;
+        }
 
-            .todoist-item-content {
-                display: block;
-                margin: -12px 0 -25px;
-            }
+        .todoist-list {
+            display: flex;
+            flex-direction: column;
+            min-height: 82px;
+            height: 100%;
+            overflow: auto;
+        }
+        
+        .card {
+            padding: 10px;
+            margin: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background-color: #fff;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+        }
 
-            .todoist-item-description {
-                display: block;
-                opacity: 0.5;
-                font-size: 12px !important;
-                margin: -15px 0;
-            }
-            
-            .todoist-item-close {
-                color: var(--mdc-checkbox-unchecked-color);
-            }
+        .card-content {
+            width: 100%;
+        }
 
-            .todoist-item-completed .todoist-item-close {
-                color: #008000;
-            }
-            
-            .todoist-item-delete {
-                margin-left: auto;
-                color: var(--primary-text-color);
-            }
+        .todoist-item-add {
+            padding: 0px 5px 0px 16px;
+        }
 
-            .todoist-item-completed .todoist-item-delete {
-                color: #808080;
-            }
-            
-            .todoist-list-add-row, .todoist-list-edit-row {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-            }
+        .todoist-item-add {
+            width: 100%;
+            line-height: 9px;
+            height: 3rem;
+        }
 
-            .todoist-item-add {
-                padding: 0px 5px 0px 16px;
-            }
-
-            .todoist-item-add, .todoist-item-edit {
-                width: 100%;
-                line-height: 9px;
-                height: 3rem;
-            }
-
-            .todoist-item ha-icon-button ha-icon {
-                margin-top: -10px;
-            }
+        .todoist-item ha-icon-button ha-icon {
+            margin-top: -10px;
+        }
         `;
     }
 }

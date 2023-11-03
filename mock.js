@@ -13,6 +13,7 @@ const mockHass = {
   "states": {
     "sensor:todoist": {
       "attributes": {
+        "friendly_name": "Kanban board",
         "project": {
           "child_order": 1,
           "collapsed": false,
@@ -154,7 +155,32 @@ const mockHass = {
             "sync_id": null,
             "updated_at": "2023-11-01T19:52:38Z",
             "user_id": "46873680"
-          }
+          },
+          {
+            "added_at": "2023-10-30T11:55:03.226473Z",
+            "added_by_uid": "46873680",
+            "assigned_by_uid": null,
+            "checked": false,
+            "child_order": 1,
+            "collapsed": false,
+            "completed_at": null,
+            "content": "Completed task",
+            "description": "Eg: daily, weekly, month tasks",
+            "due": null,
+            "duration": null,
+            "id": "7362904952",
+            "is_deleted": false,
+            "labels": [],
+            "note_count": 0,
+            "parent_id": null,
+            "priority": 1,
+            "project_id": "2322793986",
+            "responsible_uid": null,
+            "section_id": "138240554",
+            "sync_id": null,
+            "updated_at": "2023-11-01T19:52:38Z",
+            "user_id": "46873680"
+          }          
         ],
         "sections": [
           {
@@ -164,7 +190,7 @@ const mockHass = {
             "id": "138441573",
             "is_archived": false,
             "is_deleted": false,
-            "name": "Tasks 🛠",
+            "name": "To do 🛠",
             "project_id": "2322793986",
             "section_order": 1,
             "sync_id": null,
@@ -177,7 +203,7 @@ const mockHass = {
             "id": "138240553",
             "is_archived": false,
             "is_deleted": false,
-            "name": "Routines 🔁",
+            "name": "In progress 🔁",
             "project_id": "2322793986",
             "section_order": 2,
             "sync_id": null,
@@ -190,7 +216,7 @@ const mockHass = {
             "id": "138240554",
             "is_archived": false,
             "is_deleted": false,
-            "name": "Inspiration ✨",
+            "name": "Done ✨",
             "project_id": "2322793986",
             "section_order": 3,
             "sync_id": null,
@@ -199,7 +225,8 @@ const mockHass = {
         ]
       }
     }
-  }
+  },
+  "callService": () => Promise.resolve(),
 };
 
 (() => {
@@ -209,14 +236,5 @@ const mockHass = {
 
   let card = document.getElementById("renderer");
   
-  
   card.appendChild(elem);
-  
-  setTimeout(() => {
-    let lnk = document.createElement("link");
-    lnk.rel = "stylesheet";
-    lnk.href = "ha-card.css";
-    
-    elem.shadowRoot.insertBefore(lnk, elem.shadowRoot.firstChild)
-  }, 1000);
 })();
