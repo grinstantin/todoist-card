@@ -1,6 +1,30 @@
+<link href="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.css" rel="stylesheet">
+<script src="https://unpkg.com/material-components-web@latest/dist/material-components-web.min.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+
+<script src="ha_polyfills/ha-components.js" type="module"></script>
+
+<link rel="stylesheet" href="hass.css" />
+
+<style>
+    .renderer {
+        width: 300px;
+        margin: 1rem 2rem;
+    }
+    .header {
+        margin: 1rem 0 0 2rem;
+    }
+</style>
+
 <script src="todoist-kanban-card.js" type="module"></script>
 
-<div id="ha-card">
+<h2 class="header">Card view</h1>
+<div id="renderer" class="renderer">
 </div>
+
+<ha-icon-button>
+    <ha-icon icon="mdi:favorite">
+    </ha-icon>
+</ha-icon-button>
 
 <script src="mock.js"></script>
