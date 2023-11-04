@@ -7,12 +7,12 @@ class TodoistKanbanCardEditor extends LitElement {
             config: Object,
         };
     }
-    
+
     get _entity() {
         if (this.config) {
             return this.config.entity || '';
         }
-        
+
         return '';
     }
 
@@ -20,15 +20,15 @@ class TodoistKanbanCardEditor extends LitElement {
         if (this.config) {
             return (this.config.show_completed !== undefined) ? this.config.show_completed : 5;
         }
-        
+
         return 5;
     }
-    
+
     get _show_header() {
         if (this.config) {
             return this.config.show_header || true;
         }
-        
+
         return true;
     }
 
@@ -36,23 +36,15 @@ class TodoistKanbanCardEditor extends LitElement {
         if (this.config) {
             return this.config.show_item_add || true;
         }
-        
-        return true;
-    }
 
-    get _use_quick_add() {
-        if (this.config) {
-            return this.config.use_quick_add || false;
-        }
-        
-        return false;
+        return true;
     }
 
     get _show_item_close() {
         if (this.config) {
             return this.config.show_item_close || true;
         }
-        
+
         return true;
     }
 
@@ -60,7 +52,7 @@ class TodoistKanbanCardEditor extends LitElement {
         if (this.config) {
             return this.config.show_item_delete || true;
         }
-        
+
         return true;
     }
 
@@ -68,25 +60,25 @@ class TodoistKanbanCardEditor extends LitElement {
         if (this.config) {
             return this.config.only_today_overdue || false;
         }
-        
+
         return false;
     }
-    
+
     setConfig(config) {
         this.config = config;
     }
-    
+
     configChanged(config) {
         const e = new Event('config-changed', {
             bubbles: true,
             composed: true,
         });
-        
+
         e.detail = {config: config};
-        
+
         this.dispatchEvent(e);
     }
-    
+
     getEntitiesByType(type) {
         return this.hass
             ? Object.keys(this.hass.states).filter(entity => entity.substr(0, entity.indexOf('.')) === type)
@@ -96,7 +88,7 @@ class TodoistKanbanCardEditor extends LitElement {
     isNumeric(v) {
         return !isNaN(parseFloat(v)) && isFinite(v);
     }
-    
+
     valueChanged(e) {
         if (
             !this.config
@@ -105,7 +97,7 @@ class TodoistKanbanCardEditor extends LitElement {
         ) {
             return;
         }
-        
+
         if (e.target.configValue) {
             if (e.target.value === '') {
                 if (!['entity', 'show_completed'].includes(e.target.configValue)) {
@@ -120,15 +112,15 @@ class TodoistKanbanCardEditor extends LitElement {
                 };
             }
         }
-        
+
         this.configChanged(this.config);
     }
-    
+
     render() {
         if (!this.hass) {
             return html``;
         }
-        
+
         const entities = this.getEntitiesByType('sensor');
         const completedCount = [...Array(16).keys()];
 
@@ -164,8 +156,8 @@ class TodoistKanbanCardEditor extends LitElement {
                     })}
                 </ha-select>
             </div>
-            
-            
+
+
             <div class="option">
                 <ha-switch
                     .checked=${(this.config.show_header === undefined) || (this.config.show_header !== false)}
@@ -188,23 +180,6 @@ class TodoistKanbanCardEditor extends LitElement {
 
             <div class="option">
                 <ha-switch
-                    .checked=${(this.config.use_quick_add !== undefined) && (this.config.use_quick_add !== false)}
-                    .configValue=${'use_quick_add'}
-                    @change=${this.valueChanged}
-                >
-                </ha-switch>
-                <span>
-                    Use the <a target="_blank" href="https://todoist.com/help/articles/task-quick-add">Quick Add</a> implementation, available in the official Todoist clients
-                </span>
-            </div>
-            <div class="option" style="font-size: 0.7rem; margin: -12px 0 0 45px">
-                <span>
-                    Check your <a target="_blank" href="https://github.com/grinstantin/todoist-card#using-the-card">configuration</a> before using this option
-                </span>
-            </div>
-
-            <div class="option">
-                <ha-switch
                     .checked=${(this.config.show_item_close === undefined) || (this.config.show_item_close !== false)}
                     .configValue=${'show_item_close'}
                     @change=${this.valueChanged}
@@ -222,6 +197,11 @@ class TodoistKanbanCardEditor extends LitElement {
                 </ha-switch>
                 <span>Show "delete" buttons</span>
             </div>
+            <div class="option" style="font-size: 0.7rem; margin: -12px 0 0 45px">
+                <span>
+                    * Only shown in the last section of the project.
+                </span>
+            </div>
 
             <div class="option">
                 <ha-switch
@@ -234,19 +214,19 @@ class TodoistKanbanCardEditor extends LitElement {
             </div>
         </div>`;
     }
-    
+
     static get styles() {
         return css`
             .card-config ha-select {
                 width: 100%;
             }
-            
+
             .option {
                 display: flex;
                 align-items: center;
                 padding: 5px;
             }
-            
+
             .option ha-switch {
                 margin-right: 10px;
             }
@@ -268,7 +248,7 @@ class TodoistKanbanCard extends LitElement {
             config: Object,
         };
     }
-    
+
     static getConfigElement() {
         return document.createElement('todoist-kanban-card-editor');
     }
@@ -277,76 +257,64 @@ class TodoistKanbanCard extends LitElement {
         if (!config.entity) {
             throw new Error('Entity is not set!');
         }
-        
+
         this.config = config;
     }
 
     getCardSize() {
         return this.hass ? (this.hass.states[this.config.entity].attributes.items.length || 1) : 1;
     }
-    
+
     random(min, max) {
         return Math.floor(Math.random() * (max - min) + min);
     }
 
     getUUID() {
         let date = new Date();
-                    
+
         return this.random(1, 100) + '-' + (+date) + '-' + date.getMilliseconds();
     }
-    
+
     itemAdd() {
         let input = this.shadowRoot.getElementById('todoist-card-item-add');
+        let state = this.hass.states[this.config.entity] || undefined;
         let value = input.value;
-        
+        if (!state) {
+            return;
+        }
+
         if (value && value.length > 1) {
-            let stateValue = this.hass.states[this.config.entity].state || undefined;
-            
+            let stateValue = state.state || undefined;
+
             if (stateValue) {
                 let uuid = this.getUUID();
 
-                if (!this.config.use_quick_add) {
-                    let commands = [{
-                        'type': 'item_add',
-                        'temp_id': uuid,
-                        'uuid': uuid,
-                        'args': {
-                            'project_id': stateValue,
-                            'content': value,
-                        },
-                    }];
+                let section_id = state.attributes.sections?.length > 0 ? {
+                    "section_id": state.attributes.sections[0].id
+                } : {};
 
-                    this.hass
-                        .callService('rest_command', 'todoist', {
-                            url: 'sync',
-                            payload: 'commands=' + JSON.stringify(commands),
-                        })
-                        .then(response => {
-                            input.value = '';
+                let commands = [{
+                    'type': 'item_add',
+                    'temp_id': uuid,
+                    'uuid': uuid,
+                    'args': {
+                        'project_id': stateValue,
+                        'content': value,
+                        ...section_id
+                    },
+                }];
+                this.hass
+                    .callService('rest_command', 'todoist', {
+                        url: 'sync',
+                        payload: 'commands=' + JSON.stringify(commands),
+                    })
+                    .then(response => {
+                        input.value = '';
 
-                            this.hass.callService('homeassistant', 'update_entity', {
-                                entity_id: this.config.entity,
-                            });
+                        this.hass.callService('homeassistant', 'update_entity', {
+                            entity_id: this.config.entity,
                         });
-                } else {
-                    let state = this.hass.states[this.config.entity] || undefined;
-                    if (!state) {
-                        return;
-                    }
-                    
-                    this.hass
-                        .callService('rest_command', 'todoist', {
-                            url: 'quick/add',
-                            payload: 'text=' + value + ' #' + state.attributes.project.name.replaceAll(' ',''),
-                        })
-                        .then(response => {
-                            input.value = '';
-
-                            this.hass.callService('homeassistant', 'update_entity', {
-                                entity_id: this.config.entity,
-                            });
-                        });
-                }
+                    });
             }
         }
     }
@@ -356,10 +324,10 @@ class TodoistKanbanCard extends LitElement {
             this.itemAdd();
         }
     }
-    
+
     itemDelete(item) {
         let state = this.hass.states[this.config.entity] || undefined;
-        
+
         if (state) {
             let items = state.attributes.items || [];
             let itemIndex = items.indexOf(item);
@@ -372,7 +340,7 @@ class TodoistKanbanCard extends LitElement {
                     'id': item.id,
                 },
             }];
-            
+
             this.hass
                 .callService('rest_command', 'todoist', {
                     url: 'sync',
@@ -390,10 +358,9 @@ class TodoistKanbanCard extends LitElement {
 
     itemMove(item, direction) {
         let state = this.hass.states[this.config.entity] || undefined;
-        
+
         if (state) {
             let sections = state.attributes.sections || [];
-            console.log("Sections", sections);
             let section = sections.find(section => section.id == item.section_id)
             let sectionIndex = sections.indexOf(section);
             let newSection;
@@ -425,26 +392,26 @@ class TodoistKanbanCard extends LitElement {
                     });
                 });
             this.requestUpdate();
-        }      
+        }
     }
 
     render() {
         let state = this.hass.states[this.config.entity] || undefined;
-        
+
         if (!state) {
             return html``;
         }
-        
+
         let items = state.attributes.items || [];
         let sections = state.attributes.sections || [];
-        
+
         if (this.config.only_today_overdue) {
             items = items.filter(item => {
                 if (item.due) {
                     if (/^\d{4}-\d{2}-\d{2}$/.test(item.due.date)) {
                         item.due.date += 'T00:00:00';
                     }
-                    
+
                     return (new Date()).setHours(23, 59, 59, 999) >= (new Date(item.due.date)).getTime();
                 }
 
@@ -458,33 +425,38 @@ class TodoistKanbanCard extends LitElement {
             }
         });
 
-        let show_header = this.config.show_header ?? true;      
+        let show_header = this.config.show_header ?? true;
 
         return html`<ha-card class="${show_header ? "has-header" : ""}">
             <div class="container">
                 ${show_header ? html`<h1 class="kanban-heading">${state.attributes.friendly_name}</h1>` : html``}
-                
+
                 <div class="kanban-board">
                     ${sections.map((section, index) => html`
-                        <div class="kanban-block" id="todo">
+                        <div class="kanban-block ${index === sections.length - 1 ? 'last' : ''}" id="todo">
                             <strong>${section.name}</strong>
                             <div class="todoist-list">
                                 ${section.items.map(item => html`
                                     <div class="card">
-                                        <span class="card-content">${item.content}</span>
+                                        ${item.description
+                                            ? html`<div class="card-content">
+                                                <span class="todoist-item-content">${item.content}</span>
+                                                <span class="todoist-item-description">${item.description}</span>
+                                            </div>`
+                                            : html`<span class="card-content">${item.content}</span>`}
                                         ${index > 0
                                             ? html`<ha-icon-button @click=${() => this.itemMove(item, 'left')}>
                                                     <ha-icon icon="mdi:arrow-left">
                                                     </ha-icon>
-                                                </button>` 
+                                                </button>`
                                             : html``}
-                                        ${index < sections.length - 1 
+                                        ${index < sections.length - 1
                                             ? html`<ha-icon-button @click=${() => this.itemMove(item, 'right')}>
                                                     <ha-icon icon="mdi:arrow-right">
                                                     </ha-icon>
-                                                </button>` 
+                                                </button>`
                                             : html``}
-                                        ${index === sections.length - 1
+                                        ${index === sections.length - 1 && ((this.config.show_item_delete === undefined) || (this.config.show_item_delete !== false))
                                             ? html`<ha-icon-button
                                                         class="todoist-item-delete"
                                                         @click=${() => this.itemDelete(item)}>
@@ -518,7 +490,16 @@ class TodoistKanbanCard extends LitElement {
             </div>
         </ha-card>`;
     }
-    
+
+    static isDarkTheme() {
+        try {
+            const meta = document.querySelector("meta[name='theme-color']");
+            return meta.content !== "#03a9f4";
+        } catch {
+            return false;
+        }
+    }
+
     static get styles() {
         return css`
         * {
@@ -526,51 +507,58 @@ class TodoistKanbanCard extends LitElement {
             margin: 0;
             padding: 0;
         }
-        
+
         .container {
             width: calc(100% - 20px);
             margin: 20px auto;
         }
-        
+
         .kanban-heading {
             text-align: center;
             font-family: Arial, sans-serif;
             font-size: 32px;
-            color: #333;
+            color: var(--ha-card-header-color,--primary-text-color);
             margin-bottom: 16px;
         }
-        
+
         .kanban-board {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
         }
-        
+
         .kanban-block {
-            width: 30%;
-            border: 1px solid #ccc;
+            width: 100%;
+            margin-right: 16px;
+            border: 1px solid var(${ this.isDarkTheme() ? css`--primary-background-color` : css`--secondary-background-color`});
             border-radius: 10px;
             overflow-y: auto;
             font-family: Arial, sans-serif;
             font-size: 18px;
-            color: #333;
+            color: var(--ha-card-header-color,--primary-text-color);
             display: flex;
             flex-direction: column;
+        }
+
+        .kanban-block.last {
+            margin-right: 0;
         }
 
         .todoist-list-add-row {
             display: flex;
             flex-direction: row;
             align-items: center;
+            margin-bottom: 10px;
         }
-        
+
         .kanban-block strong {
             display: block;
             text-align: center;
             padding: 10px;
-            background-color: #eee;
+            background-color: var(${ this.isDarkTheme() ? css`--primary-background-color` : css`--secondary-background-color`});
+            margin-bottom: 10px;
         }
-        
+
         .kanban-block ul {
             list-style: none;
         }
@@ -582,13 +570,12 @@ class TodoistKanbanCard extends LitElement {
             height: 100%;
             overflow: auto;
         }
-        
+
         .card {
             padding: 10px;
-            margin: 10px;
-            border: 1px solid #ccc;
+            margin: 0px 10px 10px 10px;
             border-radius: 5px;
-            background-color: #fff;
+            background-color: var(${ this.isDarkTheme() ? css`--secondary-background-color` : css`--primary-background-color`});
             box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: row;
@@ -597,6 +584,12 @@ class TodoistKanbanCard extends LitElement {
 
         .card-content {
             width: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .todoist-item-description {
+            font-size: x-small;
         }
 
         .todoist-item-add {
