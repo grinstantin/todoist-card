@@ -16,14 +16,6 @@ class TodoistKanbanCardEditor extends LitElement {
         return '';
     }
 
-    get _show_completed() {
-        if (this.config) {
-            return (this.config.show_completed !== undefined) ? this.config.show_completed : 5;
-        }
-
-        return 5;
-    }
-
     get _show_header() {
         if (this.config) {
             return this.config.show_header || true;
@@ -35,14 +27,6 @@ class TodoistKanbanCardEditor extends LitElement {
     get _show_item_add() {
         if (this.config) {
             return this.config.show_item_add || true;
-        }
-
-        return true;
-    }
-
-    get _show_item_close() {
-        if (this.config) {
-            return this.config.show_item_close || true;
         }
 
         return true;
@@ -100,7 +84,7 @@ class TodoistKanbanCardEditor extends LitElement {
 
         if (e.target.configValue) {
             if (e.target.value === '') {
-                if (!['entity', 'show_completed'].includes(e.target.configValue)) {
+                if (!['entity'].includes(e.target.configValue)) {
                     delete this.config[e.target.configValue];
                 }
             } else {
@@ -122,7 +106,6 @@ class TodoistKanbanCardEditor extends LitElement {
         }
 
         const entities = this.getEntitiesByType('sensor');
-        const completedCount = [...Array(16).keys()];
 
         return html`<div class="card-config">
             <div class="option">
@@ -142,23 +125,6 @@ class TodoistKanbanCardEditor extends LitElement {
             </div>
 
             <div class="option">
-                <ha-select
-                    naturalMenuWidth
-                    fixedMenuPosition
-                    label="Number of completed tasks shown at the end of the list (0 to disable)"
-                    @selected=${this.valueChanged}
-                    @closed=${(event) => event.stopPropagation()}
-                    .configValue=${'show_completed'}
-                    .value=${this._show_completed}
-                >
-                    ${completedCount.map(count => {
-                        return html`<mwc-list-item .value="${count}">${count}</mwc-list-item>`;
-                    })}
-                </ha-select>
-            </div>
-
-
-            <div class="option">
                 <ha-switch
                     .checked=${(this.config.show_header === undefined) || (this.config.show_header !== false)}
                     .configValue=${'show_header'}
@@ -176,16 +142,6 @@ class TodoistKanbanCardEditor extends LitElement {
                 >
                 </ha-switch>
                 <span>Show text input element for adding new items to the list</span>
-            </div>
-
-            <div class="option">
-                <ha-switch
-                    .checked=${(this.config.show_item_close === undefined) || (this.config.show_item_close !== false)}
-                    .configValue=${'show_item_close'}
-                    @change=${this.valueChanged}
-                >
-                </ha-switch>
-                <span>Show "close/complete" and "uncomplete" buttons</span>
             </div>
 
             <div class="option">
@@ -239,7 +195,7 @@ class TodoistKanbanCard extends LitElement {
     constructor() {
         super();
 
-        this.itemsCompleted = [];
+        this._useDarkTheme = TodoistKanbanCard.isDarkTheme();
     }
 
     static get properties() {
@@ -279,6 +235,7 @@ class TodoistKanbanCard extends LitElement {
         let input = this.shadowRoot.getElementById('todoist-card-item-add');
         let state = this.hass.states[this.config.entity] || undefined;
         let value = input.value;
+        
         if (!state) {
             return;
         }
@@ -303,6 +260,10 @@ class TodoistKanbanCard extends LitElement {
                         ...section_id
                     },
                 }];
+                let items = state.attributes.items || [];
+                items.push(commands[0].args);
+                this.requestUpdate();
+
                 this.hass
                     .callService('rest_command', 'todoist', {
                         url: 'sync',
@@ -427,7 +388,7 @@ class TodoistKanbanCard extends LitElement {
 
         let show_header = this.config.show_header ?? true;
 
-        return html`<ha-card class="${show_header ? "has-header" : ""}">
+        return html`<ha-card class="${show_header ? "has-header" : ""} ${this._useDarkTheme ? "dark": ""}">
             <div class="container">
                 ${show_header ? html`<h1 class="kanban-heading">${state.attributes.friendly_name}</h1>` : html``}
 
@@ -491,6 +452,11 @@ class TodoistKanbanCard extends LitElement {
         </ha-card>`;
     }
 
+    useDarkTheme(darkTheme) {
+        this._useDarkTheme = darkTheme;
+        this.requestUpdate();
+    }
+
     static isDarkTheme() {
         try {
             const meta = document.querySelector("meta[name='theme-color']");
@@ -530,7 +496,7 @@ class TodoistKanbanCard extends LitElement {
         .kanban-block {
             width: 100%;
             margin-right: 16px;
-            border: 1px solid var(${ this.isDarkTheme() ? css`--primary-background-color` : css`--secondary-background-color`});
+            border: 1px solid var(--secondary-background-color);
             border-radius: 10px;
             overflow-y: auto;
             font-family: Arial, sans-serif;
@@ -538,6 +504,11 @@ class TodoistKanbanCard extends LitElement {
             color: var(--ha-card-header-color,--primary-text-color);
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        .dark .kanban-block {
+            border: 1px solid var(--primary-background-color);
         }
 
         .kanban-block.last {
@@ -555,8 +526,12 @@ class TodoistKanbanCard extends LitElement {
             display: block;
             text-align: center;
             padding: 10px;
-            background-color: var(${ this.isDarkTheme() ? css`--primary-background-color` : css`--secondary-background-color`});
+            background-color: var(--secondary-background-color);
             margin-bottom: 10px;
+        }
+
+        .dark .kanban-block strong {
+            background-color: var(--primary-background-color);
         }
 
         .kanban-block ul {
@@ -575,11 +550,15 @@ class TodoistKanbanCard extends LitElement {
             padding: 10px;
             margin: 0px 10px 10px 10px;
             border-radius: 5px;
-            background-color: var(${ this.isDarkTheme() ? css`--secondary-background-color` : css`--primary-background-color`});
+            background-color: var(--primary-background-color);
             box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: row;
             align-items: center;
+        }
+
+        .dark .card {
+            background-color: var(--secondary-background-color);
         }
 
         .card-content {

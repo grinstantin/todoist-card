@@ -5,10 +5,10 @@
   "main": "todoist-kanban-card.js",
   "type": "module",
   "scripts": {
-    "start": "web-dev-server"
+    "start": "web-dev-server --app-index dev/index.html"
   },
   "author": "Bruno Corte",
-  "license": "ISC",
+  "license": "MIT",
   "devDependencies": {
     "@material/web": "^1.0.1",
     "@web/dev-server": "^0.4.0"

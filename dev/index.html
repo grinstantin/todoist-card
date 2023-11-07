@@ -1,0 +1,59 @@
+<html>
+    <head>
+        <meta name="theme-color" content="#03a9f4">
+
+        <link href="https://fonts.googleapis.com/icon?family=Material+Symbols+Outlined" rel="stylesheet">
+        <script src="ha-components.js" type="module"></script>   
+        <link rel="stylesheet" href="hass.css" />
+
+        <style>
+            .header {
+                margin: 1rem 0 0 2rem;
+                display: flex;
+                flex-direction: row;
+                align-items: center;
+            }
+            .theme-button {
+                margin-left: 3rem;
+            }
+            .theme-button * {
+                color: var(--primary-text-color); 
+            }
+            .theme-button span {
+                font-size: small; 
+                width: 5rem;
+                margin-top: 0.33rem;
+            }
+        </style>
+        <script>
+            function darkTheme(elem) {
+                // Then toggle (add/remove) the .dark-theme class to the body
+                document.querySelector("html").classList.toggle('dark-theme');  
+                
+                let isDarkTheme = document.querySelector("html").classList.contains('dark-theme');
+                elem.querySelector('md-icon').innerText = isDarkTheme ? "light_mode" : "dark_mode";
+                elem.querySelector('span').innerText = isDarkTheme ? "Light mode" : "Dark mode";
+                document.querySelector("todoist-kanban-card").useDarkTheme(isDarkTheme);
+            }
+        </script>
+    </head>
+    <body>
+        <script src="../todoist-kanban-card.js" type="module"></script>
+        
+        <div class="header">
+            <h2>Card view</h2>
+            <md-icon-button class="theme-button" onclick="darkTheme(this)">
+                <md-icon>
+                    dark_mode
+                </md-icon>
+                <span>Dark mode</span>
+            </md-icon-button>
+        </div>       
+        
+        <div id="renderer">
+        </div>
+        
+        <script src="mock.js"></script>
+    </body>
+</html>
+

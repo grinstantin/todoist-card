@@ -67,6 +67,18 @@ class HaIconButton extends LitElement {
             </md-icon-button>
         `;
     }
+
+    static get styles() {
+        return css`
+            :host {
+                color: var(--primary-text-color);
+            }
+
+            md-icon-button {
+                color: var(--primary-text-color);
+            }
+        `;
+    }
 }
 
 class HaIcon extends LitElement {
@@ -78,7 +90,7 @@ class HaIcon extends LitElement {
 
     render() {
         return html`
-            <md-icon>
+            <md-icon style="color: var(--primary-text-color);">
                 ${translateIcon(this.icon)}
             </md-icon>
         `;
