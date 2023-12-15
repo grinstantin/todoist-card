@@ -64,8 +64,13 @@ This card can be configured using Lovelace UI editor.
     ```yaml
     todoist_api_token: 'Bearer TODOIST_API_TOKEN'
     ```
-3. Replace `TODOIST_API_TOKEN` with your [token](https://todoist.com/prefs/integrations) and `TODOIST_PROJECT_ID` with ID of your selected Todoist project.
-    > You can get `TODOIST_PROJECT_ID` from project URL, which usually looks like this:
+3. Replace `TODOIST_API_TOKEN` with your [token](https://app.todoist.com/app/settings/integrations/developer)
+
+    > Important note! Replace only the `TODOIST_API_TOKEN` and keep the 'Bearer ' part unchanged.
+
+    and `TODOIST_PROJECT_ID` with ID of your selected Todoist project.
+
+    > `TODOIST_PROJECT_ID` contains only numbers. You can get it from project URL, which usually looks like this:
     `https://todoist.com/app/project/TODOIST_PROJECT_ID`
 4. Reload configs or restart Home Assistant.
 5. In Lovelace UI, click 3 dots in top left corner.
