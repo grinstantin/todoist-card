@@ -71,6 +71,30 @@ class TodoistCardEditor extends LitElement {
         
         return false;
     }
+
+    get _sort_by_due_date() {
+        if (this.config) {
+            return this.config.sort_by_due_date || false;
+        }
+        
+        return false;
+    }
+
+    get _ascending_order() {
+        if (this.config) {
+            return this.config.ascending_order || false;
+        }
+
+        return false;
+    }
+
+    get _custom_days_filter() {
+        if (this.config) {
+            return this.config.custom_days_filter || -1;
+        }
+        
+        return -1;
+    }
     
     setConfig(config) {
         this.config = config;
@@ -131,6 +155,7 @@ class TodoistCardEditor extends LitElement {
         
         const entities = this.getEntitiesByType('sensor');
         const completedCount = [...Array(16).keys()];
+        const daysOut = [-1, ...Array(90).keys()];
 
         return html`<div class="card-config">
             <div class="option">
@@ -231,6 +256,44 @@ class TodoistCardEditor extends LitElement {
                 </ha-switch>
                 <span>Only show today or overdue</span>
             </div>
+
+            <div class="option">
+                <ha-switch
+                    .checked=${(this.config.sort_by_due_date !== undefined) && (this.config.sort_by_due_date !== false)}
+                    .configValue=${'sort_by_due_date'}
+                    @change=${this.valueChanged}
+                >
+                </ha-switch>
+                <span>Sort by due date</span>
+            </div>
+
+            ${this.config.sort_by_due_date === true ? html`
+            <div class="option">
+                <ha-switch
+                    .checked=${(this.config.ascending_order !== undefined) && (this.config.ascending_order !== false)}
+                    .configValue=${'ascending_order'}
+                    @change=${this.valueChanged}
+                >
+                </ha-switch>
+                <span>Sort by due date in ascending order, otherwise descending</span>
+            </div>` : null }
+            <div class="option">
+                <ha-select
+                    naturalMenuWidth
+                    fixedMenuPosition
+                    label="Only show tasks due within the next X days (-1 to disable, 0 for today, 1 for tomorrow, etc)"
+                    @selected=${this.valueChanged}
+                    @closed=${(event) => event.stopPropagation()}
+                    .configValue=${'custom_days_filter'}
+                    .value=${this._custom_days_filter}
+                >
+            
+                ${daysOut.map(days => {
+                    return html`<mwc-list-item .value="${days}">${days}</mwc-list-item>`;
+                })}
+                </ha-select>
+            </div>
+
         </div>`;
     }
     
@@ -453,6 +516,34 @@ class TodoistCard extends LitElement {
                 return false;
             });
         }
+
+        if (this.config.sort_by_due_date) {
+            items.sort((a, b) => {
+                if (a.due && b.due) {                  
+                    if (this.config.ascending_order){ 
+                        return (new Date(a.due.date)).getTime() - (new Date(b.due.date)).getTime();
+                    }
+                    return (new Date(b.due.date)).getTime() - (new Date(a.due.date)).getTime();
+                }
+
+                return 0;
+            });
+        }
+        
+        if (this.config.custom_days_filter !== -1) {
+            const days_out = this.config.custom_days_filter;
+            items = items.filter(item => {
+                if (item.due) {
+                    if (/^\d{4}-\d{2}-\d{2}$/.test(item.due.date)) {
+                        item.due.date += 'T00:00:00';
+                    }
+                    
+                    return (new Date()).setHours(23, 59, 59, 999) + (days_out * 24 * 60 * 60 * 1000) >= (new Date(item.due.date)).getTime();
+                }
+
+                return false;
+            });
+        }
         
         return html`<ha-card>
             ${(this.config.show_header === undefined) || (this.config.show_header !== false)
@@ -475,10 +566,9 @@ class TodoistCard extends LitElement {
                                     icon="mdi:circle-medium"
                                 ></ha-icon>`}
                             <div class="todoist-item-text">
-                                ${item.description
-                                    ? html`<span class="todoist-item-content">${item.content}</span>
-                                           <span class="todoist-item-description">${item.description}</span>`
-                                    : item.content}
+                                ${item.content ? html`<span class="todoist-item-content">${item.content}</span>` : null}
+                                ${item.description ? html`<span class="todoist-item-description">${item.description}</span>` : null}
+                                ${item.due ? html`<span class="todoist-item-due">${item.due.date}</span>` : null}
                             </div>
                             ${(this.config.show_item_delete === undefined) || (this.config.show_item_delete !== false)
                                 ? html`<ha-icon-button
@@ -490,7 +580,7 @@ class TodoistCard extends LitElement {
                                 : html``}
                         </div>`;
                     })
-                    : html`<div class="todoist-list-empty">No uncompleted tasks!</div>`}
+                    : html`<div class="todoist-list-empty">List empty!</div>`}
                 ${this.config.show_completed && this.itemsCompleted
                     ? this.itemsCompleted.map(item => {
                             return html`<div class="todoist-item todoist-item-completed">
@@ -505,10 +595,9 @@ class TodoistCard extends LitElement {
                                         icon="mdi:circle-medium"
                                     ></ha-icon>`}
                                 <div class="todoist-item-text">
-                                    ${item.description
-                                        ? html`<span class="todoist-item-content">${item.content}</span>
-                                            <span class="todoist-item-description">${item.description}</span>`
-                                        : item.content}
+                                    ${item.content ? html`<span class="todoist-item-content">${item.content}</span>` : null}
+                                    ${item.description ? html`<span class="todoist-item-description">${item.description}</span>` : null}
+                                    ${item.due ? html`<span class="todoist-item-due">${item.due.date}</span>` : null}
                                 </div>
                                 ${(this.config.show_item_delete === undefined) || (this.config.show_item_delete !== false)
                                     ? html`<ha-icon-button
@@ -576,6 +665,13 @@ class TodoistCard extends LitElement {
             }
 
             .todoist-item-description {
+                display: block;
+                opacity: 0.5;
+                font-size: 12px !important;
+                margin: -15px 0;
+            }
+
+            .todoist-item-due {
                 display: block;
                 opacity: 0.5;
                 font-size: 12px !important;
