@@ -1,3 +1,16 @@
+> [!WARNING]
+> ## This project is no longer maintained
+>
+> **Todoist Card is no longer actively maintained.**
+>
+> I have decided to discontinue development and support of this project. The repository is archived and there will be no further updates, bug fixes, or feature development.
+>
+> The card may continue to work, but compatibility with future versions of **Home Assistant, HACS, or Todoist is not guaranteed**.
+>
+> Please feel free to fork the project if you would like to continue development or maintain your own version.
+>
+> Thank you to everyone who used, contributed to, and supported this project over the years! ❤️
+
 # Todoist Card
 
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/hacs/integration)
